@@ -28,6 +28,7 @@ impl std::error::Error for VirusTotalError {}
 
 #[derive(Clone)]
 pub struct VirusTotalClient {
+    /// The API key used to interact with VirusTotal
     key: Zeroizing<String>,
 }
 
@@ -172,7 +173,7 @@ mod test {
                 }
             }
 
-            const ELF: &[u8] = include_bytes!("../../types/testdata/elf/elf_haiku_x86");
+            const ELF: &[u8] = include_bytes!("../testdata/elf_haiku_x86");
             client
                 .submit(Vec::from(ELF), Some("elf_haiku_x86".to_string()))
                 .await

@@ -1,5 +1,5 @@
 ## MalwareDB VirusTotal Client
-[![Test](https://github.com/malwaredb/malwaredb-rs/actions/workflows/test.yml/badge.svg)](https://github.com/malwaredb/malwaredb-rs/actions/workflows/test.yml)[![Lint](https://github.com/malwaredb/malwaredb-rs/actions/workflows/lint.yml/badge.svg)](https://github.com/malwaredb/malwaredb-rs/actions/workflows/lint.yml)[![Cross](https://github.com/malwaredb/malwaredb-rs/actions/workflows/cross.yml/badge.svg)](https://github.com/malwaredb/malwaredb-rs/actions/workflows/cross.yml)
+[![Test](https://github.com/malwaredb/vt-client/actions/workflows/test.yml/badge.svg)](https://github.com/malwaredb/vt-client/actions/workflows/test.yml)[![Lint](https://github.com/malwaredb/vt-client/actions/workflows/lint.yml/badge.svg)](https://github.com/malwaredb/vt-client/actions/workflows/lint.yml)
 
 This is logic for interacting with [VirusTotal](https://www.virustotal.com)'s [V3 API](https://virustotal.readme.io/reference/overview). At present, only the following actions are supported:
 * Fetch file report: this gets the anti-virus scan data for a given sample, and there are examples in the `testdata/` directory.
@@ -8,4 +8,7 @@ This is logic for interacting with [VirusTotal](https://www.virustotal.com)'s [V
 
 VirusTotal supports these actions given a MD5, SHA-1, or SHA-256 hash.
 
-Crates `chrono` and `serde` are used to deserialize the data into Structs for ease and convenience of working with this data.
+Crates `chrono` and `serde` are used to parse timestamps and deserialize the data into Structs for ease and convenience of working with this data.
+
+Note: at present, the response objects may contain either the response error code, or the expected response data. In the future, this will be changes to be more intuitive, a response error or HTTP error should be a real error, and the expected response should be the only data in the `Result::Ok` return.
+
