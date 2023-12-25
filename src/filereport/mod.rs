@@ -316,7 +316,6 @@ pub struct SigmaAnalysisStats {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use anyhow::Context;
     use rstest::rstest;
 
     #[rstest]
@@ -328,9 +327,8 @@ mod tests {
     #[case(include_str!("../../testdata/ddecc35aa198f401948c73a0d53fd93c4ecb770198ad7db308de026745c56b71.json"), "Win32 EXE")]
     #[case(include_str!("../../testdata/de10ba5e5402b46ea975b5cb8a45eb7df9e81dc81012fd4efd145ed2dce3a740.json"), "ELF")]
     fn deserialize_valid_report(#[case] report: &str, #[case] file_type: &str) {
-        let report: FileReportRequestResponse = serde_json::from_str(report)
-            .context("failed to deserialize VT report")
-            .unwrap();
+        let report: FileReportRequestResponse =
+            serde_json::from_str(report).expect("failed to deserialize VT report");
 
         if let FileReportRequestResponse::Data(data) = report {
             if file_type == "Mach-O" {
@@ -354,9 +352,8 @@ mod tests {
     #[case(include_str!("../../testdata/not_found.json"))]
     #[case(include_str!("../../testdata/wrong_key.json"))]
     fn deserialize_errors(#[case] contents: &str) {
-        let report: FileReportRequestResponse = serde_json::from_str(contents)
-            .context("failed to deserialize VT error response")
-            .unwrap();
+        let report: FileReportRequestResponse =
+            serde_json::from_str(contents).expect("failed to deserialize VT error response");
 
         match report {
             FileReportRequestResponse::Data(_) => panic!("Should have been an error type!"),

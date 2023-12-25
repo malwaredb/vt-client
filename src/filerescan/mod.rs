@@ -25,15 +25,13 @@ pub struct FileRescanRequestData {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use anyhow::Context;
 
     #[test]
     fn deserialize_valid_response() {
         const RESPONSE: &str = include_str!("../../testdata/rescan.json");
 
-        let rescan: FileRescanRequestResponse = serde_json::from_str(RESPONSE)
-            .context("failed to deserialize VT rescan")
-            .unwrap();
+        let rescan: FileRescanRequestResponse =
+            serde_json::from_str(RESPONSE).expect("failed to deserialize VT rescan");
 
         if let FileRescanRequestResponse::Data(data) = rescan {
             assert_eq!(data.rescan_type, "analysis");
