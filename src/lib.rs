@@ -1,3 +1,4 @@
+pub mod errors;
 pub mod filereport;
 pub mod filerescan;
 
@@ -14,10 +15,17 @@ use serde::{Deserialize, Serialize};
 use zeroize::Zeroizing;
 
 /// Capture the error from VirusTotal, plus parsing or networking errors along the way
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, Serialize, Deserialize)]
 pub struct VirusTotalError {
     pub message: String,
     pub code: String,
+}
+
+impl PartialEq for VirusTotalError {
+    fn eq(&self, other: &VirusTotalError) -> bool {
+        // Only check the code, since the VT error messages don't always match their documentation.
+        self.code.to_lowercase() == other.code.to_lowercase()
+    }
 }
 
 impl Display for VirusTotalError {
@@ -54,7 +62,7 @@ impl From<serde_json::Error> for VirusTotalError {
 impl From<FromUtf8Error> for VirusTotalError {
     fn from(err: FromUtf8Error) -> Self {
         Self {
-            message: "UTF-8 decoding error error".into(),
+            message: "UTF-8 decoding error".into(),
             code: err.to_string(),
         }
     }
@@ -220,6 +228,15 @@ mod test {
                 .submit(Vec::from(ELF), Some("elf_haiku_x86".to_string()))
                 .await
                 .unwrap();
+
+            match client.get_report("AABBCCDD").await {
+                Ok(_) => {
+                    unreachable!("No way this should work");
+                }
+                Err(err) => {
+                    assert_eq!(err, *crate::errors::NOT_FOUND_ERROR);
+                }
+            }
         } else {
             panic!("`VT_API_KEY` not set!")
         }
