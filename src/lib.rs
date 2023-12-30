@@ -182,6 +182,39 @@ impl VirusTotalClient {
             FileRescanRequestResponse::Error(error) => Err(error),
         }
     }
+
+    /// Download a file from VirusTotal, requires VirusTotal Premium!
+    pub async fn download(&self, file_hash: &str) -> Result<Vec<u8>, VirusTotalError> {
+        let client = reqwest::Client::new();
+        let response = client
+            .get(format!(
+                "https://www.virustotal.com/api/v3/files/{file_hash}/download"
+            ))
+            .headers(self.header())
+            .send()
+            .await?;
+
+        if !response.status().is_success() {
+            let body = response.bytes().await?;
+            let json_response = String::from_utf8(body.to_ascii_lowercase())?;
+
+            // Just borrowing the `FileRescanResponseRequest` type get get it's error handling
+            let error: FileRescanRequestResponse = serde_json::from_str(&json_response)?;
+            if let FileRescanRequestResponse::Error(error) = error {
+                return Err(error);
+            } else {
+                // Should never happen, since we're only here if some error occurred.
+                return Err(VirusTotalError {
+                    message: json_response,
+                    code: "VTError".into(),
+                });
+            }
+        }
+
+        let body = response.bytes().await?;
+
+        Ok(body.to_vec())
+    }
 }
 
 /// Get a VirusTotal client from a key, checking that the key is the expected length.
@@ -235,6 +268,18 @@ mod test {
                 }
                 Err(err) => {
                     assert_eq!(err, *crate::errors::NOT_FOUND_ERROR);
+                }
+            }
+
+            let response = client
+                .download("abc91ba39ea3220d23458f8049ed900c16ce1023")
+                .await;
+            match response {
+                Ok(_) => {
+                    unreachable!("This shouldn't work, unless you have VT Premium")
+                }
+                Err(e) => {
+                    assert_eq!(e, *crate::errors::FORBIDDEN_ERROR);
                 }
             }
         } else {
