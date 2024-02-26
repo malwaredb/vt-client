@@ -21,15 +21,9 @@ jobs:
     - name: Setup Rust toolchain
       run: rustup show && rustup update
     - name: cargo fmt
-      uses: actions-rs/cargo@844f36862e911db73fe0815f00a4a2602c279505 # v1.0.3
-      with:
-        command: fmt
-        args: -- --check
+      run: cargo fmt -- --check
     - name: cargo clippy
-      uses: actions-rs/cargo@844f36862e911db73fe0815f00a4a2602c279505 # v1.0.3
-      with:
-        command: clippy
-        args: --all-features --tests -- -D warnings
+      run: cargo clippy --all-features --tests -- -D warnings
 
   udeps:
     name: Unused dependencies
