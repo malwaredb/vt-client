@@ -66,7 +66,7 @@ pub struct ScanResultAttributes {
     /// File names this sample has had when submitted to VirusTotal
     pub names: Vec<String>,
 
-    /// When when the file was last modified
+    /// When the file was last modified
     #[serde(with = "ts_seconds")]
     pub last_modification_date: DateTime<Utc>,
 
@@ -80,7 +80,7 @@ pub struct ScanResultAttributes {
     /// The number of times the file has been submitted to VirusTotal
     pub times_submitted: u32,
 
-    /// Votes from the VirusTotal user community as to whether or not the file is dangerous
+    /// Votes from the VirusTotal user community whether the file is dangerous
     pub total_votes: Votes,
 
     /// Size of the file, in bytes
@@ -93,7 +93,8 @@ pub struct ScanResultAttributes {
     #[serde(with = "ts_seconds")]
     pub last_submission_date: DateTime<Utc>,
 
-    /// Anti-virus results, where the key is the name of the anti-virus software product
+    /// Antivirus results, where the key is the name of the antivirus software product
+    /// More info: https://docs.virustotal.com/reference/analyses-object
     pub last_analysis_results: HashMap<String, AnalysisResult>,
 
     /// Results from TrID, an attempt to identify the file type
@@ -133,15 +134,20 @@ pub struct ScanResultAttributes {
     /// The output from libmagic, the `file` command for this file
     pub magic: String,
 
-    /// Anti-virus summary
+    /// Antivirus results summary
     pub last_analysis_stats: LastAnalysisStats,
 
-    /// Dictionary containing the number of matched sigma rules group by its severity
+    /// Dictionary containing the number of matched Sigma rules group by its severity
     #[serde(default)]
     pub sigma_analysis_summary: HashMap<String, serde_json::Value>,
 
     #[serde(default)]
     pub sigma_analysis_stats: Option<SigmaAnalysisStats>,
+
+    /// Results from VT's Sigma rules
+    /// See https://github.com/SigmaHQ/sigma/wiki/Rule-Creation-Guide
+    #[serde(default)]
+    pub sigma_analysis_results: Vec<SigmaAnalysisResults>,
 
     /// Executables: Information on packers, if available
     #[serde(default)]
@@ -225,7 +231,7 @@ pub struct AnalysisResult {
     /// Anti-virus engine
     pub engine_name: String,
 
-    /// Version of the anti-virus engine
+    /// Version of the antivirus engine
     pub engine_version: Option<String>,
 
     /// Name of the malware identified
@@ -234,7 +240,7 @@ pub struct AnalysisResult {
     /// Method for identifying the malware
     pub method: String,
 
-    /// The date of the anti-virus engine
+    /// The date of the antivirus engine
     pub engine_update: Option<String>,
 }
 
@@ -266,31 +272,56 @@ pub struct DetectItEasyValues {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct LastAnalysisStats {
-    /// Anti-virus products which indicate this file is harmless
+    /// Antivirus products which indicate this file is harmless
     pub harmless: u32,
 
-    /// Anti-virus products which don't support this file type
+    /// Antivirus products which don't support this file type
     #[serde(rename = "type-unsupported")]
     pub type_unsupported: u32,
 
-    /// Anti-virus products which indicate the file is suspicious
+    /// Antivirus products which indicate the file is suspicious
     pub suspicious: u32,
 
-    /// Anti-virus products which timed out trying to evaluate the file
+    /// Antivirus products which timed out trying to evaluate the file
     #[serde(rename = "confirmed-timeout")]
     pub confirmed_timeout: u32,
 
-    /// Anti-virus products which timed out trying to evaluate the file
+    /// Antivirus products which timed out trying to evaluate the file
     pub timeout: u32,
 
-    /// Anti-virus products which failed to analyze the file
+    /// Antivirus products which failed to analyze the file
     pub failure: u32,
 
-    /// Anti-virus products which indicate the file is malicious
+    /// Antivirus products which indicate the file is malicious
     pub malicious: u32,
 
-    /// Anti-virus products which didn't detect a known malware type
+    /// Antivirus products which didn't detect a known malware type
     pub undetected: u32,
+}
+
+impl LastAnalysisStats {
+    /// Return the number of antivirus products which could have evaluated this file,
+    /// and exclude errors, including unsupported file type.
+    pub fn av_count(&self) -> u32 {
+        self.harmless + self.suspicious + self.malicious + self.undetected
+    }
+
+    /// Return the number of antivirus products which think the file is benign,
+    /// which is harmless and undetected
+    pub fn safe_count(&self) -> u32 {
+        self.harmless + self.undetected
+    }
+
+    /// Return the number of antivirus products which had errors for this file
+    pub fn error_count(&self) -> u32 {
+        self.type_unsupported + self.confirmed_timeout + self.timeout + self.failure
+    }
+
+    /// In an effort to error on the side of caution, call a file benign is no antivirus products
+    /// call it malicious or suspicious
+    pub fn is_benign(&self) -> bool {
+        self.malicious == 0 && self.suspicious == 0
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -311,6 +342,18 @@ pub struct SigmaAnalysisStats {
     pub medium: u64,
     pub high: u64,
     pub critical: u64,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct SigmaAnalysisResults {
+    /// Sigma rule title
+    pub rule_title: String,
+
+    /// Sigma rule source description
+    pub rule_source: String,
+
+    /// The `HashMap` likely has one field: "values" which is another map of event data
+    pub match_context: Vec<HashMap<String, serde_json::Value>>,
 }
 
 #[cfg(test)]
@@ -341,8 +384,11 @@ mod tests {
             println!("{data:?}");
             assert_eq!(data.attributes.type_description, file_type);
             assert_eq!(data.record_type, "file");
-            //println!("{:?}", data.attributes.extra);
-            //assert!(data.attributes.extra.is_empty());
+            for (key, value) in &data.attributes.extra {
+                println!("KEY: {key}");
+                println!("VALUE: {value}\n\n");
+            }
+            assert!(data.attributes.extra.is_empty());
         } else {
             panic!("File wasn't a report!");
         }
