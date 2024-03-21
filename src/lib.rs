@@ -232,6 +232,12 @@ impl FromStr for VirusTotalClient {
     }
 }
 
+impl From<String> for VirusTotalClient {
+    fn from(value: String) -> Self {
+        VirusTotalClient::new(&value)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
