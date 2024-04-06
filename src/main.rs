@@ -27,10 +27,16 @@ struct SubmitFileArg {
 
 #[derive(Parser, Clone)]
 struct FileReportArg {
-    /// The file to be used with VirusTotal
-    pub file: PathBuf,
+    /// Fetch a VT report based on a file on disk
+    #[arg(short, long)]
+    pub file: Option<PathBuf>,
 
-    /// Output for the report
+    /// Fetch a file report based on a hash (MD5, SHA-1, or SHA-256)
+    #[arg(long)]
+    pub hash: Option<String>,
+
+    /// Output for the report, or display a summary only if no output was specified
+    #[arg(short, long)]
     pub output: Option<PathBuf>,
 }
 
@@ -51,7 +57,9 @@ enum Action {
     /// Submit a file to VirusTotal
     Submit(SubmitFileArg),
 
-    /// Get a report for a file, doesn't send the file to VirusTotal
+    /// Get a report for a file, doesn't send the file to VirusTotal. Specify either a hash or a file
+    /// path, which will send that file's SHA-256 hash. Specify both without an output file, and
+    /// summary information for both files will be displayed.
     GetReport(FileReportArg),
 
     /// Request re-analysis of a file based on a hash (MD5, SHA-1, or SHA-256)
@@ -77,21 +85,58 @@ impl Action {
                 println!("Submitted, request id {}", response.id);
             }
             Action::GetReport(arg) => {
-                let contents = std::fs::read(&arg.file)?;
-                let mut sha256 = Sha256::new();
-                sha256.update(contents);
-                let sha256 = sha256.finalize();
-                let sha256 = hex::encode(sha256);
-                let response = client.get_report(&sha256).await?;
-                if let Some(report_dest) = &arg.output {
-                    let report = serde_json::to_string(&response)?;
-                    std::fs::write(report_dest, report)?;
+                if arg.file.is_none() && arg.hash.is_none() {
+                    bail!("Nothing to do, neither file path nor hash were specified.");
                 }
-                println!(
-                    "AVs with detection: {} of {}",
-                    response.attributes.last_analysis_stats.malicious,
-                    response.attributes.last_analysis_stats.av_count()
-                );
+                if let Some(report_dest) = &arg.output {
+                    if let Some(input_file) = &arg.file {
+                        let contents = std::fs::read(input_file)?;
+                        let mut sha256 = Sha256::new();
+                        sha256.update(contents);
+                        let sha256 = sha256.finalize();
+                        let sha256 = hex::encode(sha256);
+                        let response = client.get_report(&sha256).await?;
+                        let report = serde_json::to_string(&response)?;
+                        std::fs::write(report_dest, report)?;
+                        println!(
+                            "AVs with detection: {} of {} for {input_file:?}",
+                            response.attributes.last_analysis_stats.malicious,
+                            response.attributes.last_analysis_stats.av_count()
+                        );
+                    } else if let Some(input_hash) = &arg.hash {
+                        let response = client.get_report(input_hash).await?;
+                        let report = serde_json::to_string(&response)?;
+                        std::fs::write(report_dest, report)?;
+                        println!(
+                            "AVs with detection: {} of {} for {input_hash}",
+                            response.attributes.last_analysis_stats.malicious,
+                            response.attributes.last_analysis_stats.av_count()
+                        );
+                    }
+                } else {
+                    if let Some(input_file) = &arg.file {
+                        let contents = std::fs::read(input_file)?;
+                        let mut sha256 = Sha256::new();
+                        sha256.update(contents);
+                        let sha256 = sha256.finalize();
+                        let sha256 = hex::encode(sha256);
+                        let response = client.get_report(&sha256).await?;
+                        println!(
+                            "AVs with detection: {} of {} for {input_file:?}",
+                            response.attributes.last_analysis_stats.malicious,
+                            response.attributes.last_analysis_stats.av_count()
+                        );
+                    }
+
+                    if let Some(input_hash) = &arg.hash {
+                        let response = client.get_report(input_hash).await?;
+                        println!(
+                            "AVs with detection: {} of {} for {input_hash}",
+                            response.attributes.last_analysis_stats.malicious,
+                            response.attributes.last_analysis_stats.av_count()
+                        );
+                    }
+                }
             }
             Action::Rescan(arg) => {
                 if !arg.valid() {
