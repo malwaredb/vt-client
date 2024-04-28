@@ -11,5 +11,3 @@ This is logic for interacting with [VirusTotal](https://www.virustotal.com)'s [V
 VirusTotal supports these actions given a MD5, SHA-1, or SHA-256 hash.
 
 Additionally, this crate provides a client application for the supported operations above: submitting a file, retrieving a report, requesting re-analysis, and downloading a sample (requires Premium).
-
-Crates `chrono` and `serde` are used to parse timestamps and deserialize the data into Structs for ease and convenience of working with this data.
