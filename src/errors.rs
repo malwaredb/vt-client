@@ -91,7 +91,7 @@ You may have run out of disk space and/or number of files on your VirusTotal Mon
     };
 
     /// Transient server error. Retry might work.
-    pub static ref TRANSIET_ERROR: VirusTotalError = VirusTotalError {
+    pub static ref TRANSIENT_ERROR: VirusTotalError = VirusTotalError {
         code: "TransientError".into(),
         message: "Transient server error. Retry might work.".into(),
     };
