@@ -12,12 +12,15 @@ use std::string::FromUtf8Error;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::multipart::Form;
 use serde::{Deserialize, Serialize};
-use zeroize::Zeroizing;
+use zeroize::Zeroize;
 
 /// Capture the error from VirusTotal, plus parsing or networking errors along the way
 #[derive(Clone, Debug, Eq, Serialize, Deserialize)]
 pub struct VirusTotalError {
+    /// Message describing the error
     pub message: String,
+
+    /// Short version of the error
     pub code: String,
 }
 
@@ -39,13 +42,13 @@ impl std::error::Error for VirusTotalError {}
 impl From<reqwest::Error> for VirusTotalError {
     fn from(err: reqwest::Error) -> Self {
         let url = if let Some(url) = err.url() {
-            format!(" loading {}", url.as_str())
+            format!(" loading {url}")
         } else {
             "".into()
         };
         Self {
             message: "Http error".into(),
-            code: format!("Error {url} {}", err),
+            code: format!("Error{url} {err}"),
         }
     }
 }
@@ -54,7 +57,7 @@ impl From<serde_json::Error> for VirusTotalError {
     fn from(err: serde_json::Error) -> Self {
         Self {
             message: "Json error".into(),
-            code: format!("Json error at line {}: {}", err.line(), err),
+            code: format!("Json error at line {}: {err}", err.line()),
         }
     }
 }
@@ -69,10 +72,10 @@ impl From<FromUtf8Error> for VirusTotalError {
 }
 
 /// VirusTotal client object
-#[derive(Clone)]
+#[derive(Clone, Zeroize)]
 pub struct VirusTotalClient {
     /// The API key used to interact with VirusTotal
-    key: Zeroizing<String>,
+    key: String,
 }
 
 impl VirusTotalClient {
@@ -80,10 +83,8 @@ impl VirusTotalClient {
     const KEY_LEN: usize = 64;
 
     /// New VirusTotal client given an API key, assuming it's valid
-    pub fn new(key: &str) -> Self {
-        Self {
-            key: Zeroizing::new(key.to_string()),
-        }
+    pub fn new(key: String) -> Self {
+        Self { key }
     }
 
     fn header(&self) -> HeaderMap {
@@ -200,15 +201,15 @@ impl VirusTotalClient {
 
             // Just borrowing the `FileRescanResponseRequest` type get get it's error handling
             let error: FileRescanRequestResponse = serde_json::from_str(&json_response)?;
-            if let FileRescanRequestResponse::Error(error) = error {
-                return Err(error);
+            return if let FileRescanRequestResponse::Error(error) = error {
+                Err(error)
             } else {
                 // Should never happen, since we're only here if some error occurred.
-                return Err(VirusTotalError {
+                Err(VirusTotalError {
                     message: json_response,
                     code: "VTError".into(),
-                });
-            }
+                })
+            };
         }
 
         let body = response.bytes().await?;
@@ -226,7 +227,7 @@ impl FromStr for VirusTotalClient {
             Err("Invalid API key length")
         } else {
             Ok(Self {
-                key: Zeroizing::new(key.to_string()),
+                key: key.to_string(),
             })
         }
     }
@@ -234,7 +235,7 @@ impl FromStr for VirusTotalClient {
 
 impl From<String> for VirusTotalClient {
     fn from(value: String) -> Self {
-        VirusTotalClient::new(&value)
+        VirusTotalClient::new(value)
     }
 }
 
@@ -248,7 +249,7 @@ mod test {
         if let Ok(api_key) = std::env::var("VT_API_KEY") {
             const HASH: &str = "fff40032c3dc062147c530e3a0a5c7e6acda4d1f1369fbc994cddd3c19a2de88";
 
-            let client = VirusTotalClient::new(&api_key);
+            let client = VirusTotalClient::new(api_key);
 
             let report = client
                 .get_report(HASH)
