@@ -4,6 +4,7 @@ pub mod filerescan;
 
 use crate::filereport::{FileReportData, FileReportRequestResponse};
 use crate::filerescan::{FileRescanRequestData, FileRescanRequestResponse};
+use std::borrow::Cow;
 
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
@@ -79,10 +80,13 @@ pub struct VirusTotalClient {
 }
 
 impl VirusTotalClient {
-    const API_KEY: &'static str = "x-apikey";
-    const KEY_LEN: usize = 64;
+    /// Header used to send the API key to VirusTotal
+    pub const API_KEY: &'static str = "x-apikey";
 
-    /// New VirusTotal client given an API key, assuming it's valid
+    /// Length of the API key
+    pub const KEY_LEN: usize = 64;
+
+    /// New VirusTotal client given an API key which is assumed to be valid.
     pub fn new(key: String) -> Self {
         Self { key }
     }
@@ -96,7 +100,7 @@ impl VirusTotalClient {
         headers
     }
 
-    /// Get a file report from VirusTotal for an MD5, SHA-1, or SHA-256 hash. It's assumed to be valid.
+    /// Get a file report from VirusTotal for an MD5, SHA-1, or SHA-256 hash, which is assumed to be valid.
     pub async fn get_report(&self, file_hash: &str) -> Result<FileReportData, VirusTotalError> {
         let client = reqwest::Client::new();
         let body = client
@@ -118,7 +122,7 @@ impl VirusTotalClient {
         }
     }
 
-    /// Request VirusTotal rescan a file for an MD5, SHA-1, or SHA-256 hash. It's assumed to be valid.
+    /// Request VirusTotal rescan a file for an MD5, SHA-1, or SHA-256 hash, which is assumed to be valid.
     pub async fn request_rescan(
         &self,
         file_hash: &str,
@@ -145,11 +149,15 @@ impl VirusTotalClient {
     }
 
     /// Submit a file to VirusTotal.
-    pub async fn submit(
+    pub async fn submit<D, N>(
         &self,
-        data: Vec<u8>,
-        name: Option<String>,
-    ) -> Result<FileRescanRequestData, VirusTotalError> {
+        data: D,
+        name: Option<N>,
+    ) -> Result<FileRescanRequestData, VirusTotalError>
+    where
+        D: Into<Cow<'static, [u8]>>,
+        N: Into<Cow<'static, str>>,
+    {
         let client = reqwest::Client::new();
         let form = if let Some(file_name) = name {
             Form::new().part(
