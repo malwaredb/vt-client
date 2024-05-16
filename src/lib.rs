@@ -13,7 +13,7 @@ use std::string::FromUtf8Error;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::multipart::Form;
 use serde::{Deserialize, Serialize};
-use zeroize::Zeroize;
+use zeroize::Zeroizing;
 
 /// Capture the error from VirusTotal, plus parsing or networking errors along the way
 #[derive(Clone, Debug, Eq, Serialize, Deserialize)]
@@ -73,10 +73,10 @@ impl From<FromUtf8Error> for VirusTotalError {
 }
 
 /// VirusTotal client object
-#[derive(Clone, Zeroize)]
+#[derive(Clone)]
 pub struct VirusTotalClient {
     /// The API key used to interact with VirusTotal
-    key: String,
+    key: Zeroizing<String>,
 }
 
 impl VirusTotalClient {
@@ -88,7 +88,9 @@ impl VirusTotalClient {
 
     /// New VirusTotal client given an API key which is assumed to be valid.
     pub fn new(key: String) -> Self {
-        Self { key }
+        Self {
+            key: Zeroizing::new(key),
+        }
     }
 
     fn header(&self) -> HeaderMap {
@@ -235,7 +237,7 @@ impl FromStr for VirusTotalClient {
             Err("Invalid API key length")
         } else {
             Ok(Self {
-                key: key.to_string(),
+                key: Zeroizing::new(key.to_string()),
             })
         }
     }
