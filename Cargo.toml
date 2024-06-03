@@ -23,4 +23,4 @@ tokio = { version = "1.38", features = ["rt", "macros"], default-features = fals
 zeroize = { version = "1.8.1", default-features = false }
 
 [dev-dependencies]
-rstest = { version = "0.20", default-features = false }
+rstest = { version = "0.21", default-features = false }
