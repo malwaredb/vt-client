@@ -19,7 +19,7 @@ jobs:
             static.crates.io:443
             static.rust-lang.org:443
 
-      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Setup Rust toolchain
         run: rustup show && rustup update
       - name: cargo fmt
@@ -46,7 +46,7 @@ jobs:
             static.rust-lang.org:443
 
       - name: Checkout repository
-        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Install nightly toolchain
         uses: dtolnay/rust-toolchain@53c04d3685fcc3ca67ce478eb9c2ea5c051a4a63 # nightly
@@ -73,7 +73,7 @@ jobs:
             static.crates.io:443
 
       - name: Checkout repository
-        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Install Cargo Audit
         run: cargo install cargo-audit
