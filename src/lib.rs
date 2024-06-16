@@ -232,7 +232,18 @@ impl VirusTotalClient {
     /// Search VirusTotal for files matching some search parameters. Requires VT Premium!
     /// For more information see https://virustotal.readme.io/v2.0/reference/file-search.
     /// Note: This uses the V2 API.
-    pub async fn search(&self, query: &str) -> Result<FileSearchResponse, VirusTotalError> {
+    /// Example:
+    ///
+    /// ```rust,compile_fail
+    /// use malwaredb_virustotal::{VirusTotalClient, filesearch};
+    ///
+    /// let client = VirusTotalClient::new(std::env::var("VT_API_KEY").unwrap());
+    /// let result = client.search(filesearch::flags::FileType::Pdf + filesearch::flags::BENIGN).await?;
+    /// ```
+    pub async fn search<Q>(&self, query: Q) -> Result<FileSearchResponse, VirusTotalError>
+    where
+        Q: Display,
+    {
         let url = format!(
             "https://www.virustotal.com/vtapi/v2/file/search?apikey={}&query={query}",
             self.key.as_str()

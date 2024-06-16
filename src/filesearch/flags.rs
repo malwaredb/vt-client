@@ -145,31 +145,54 @@ pub struct Positives {
 
     /// Optional upper bound of amount of antivirus hits
     pub max: Option<u32>,
+
+    /// Exact, [Positives::min] won't have `+`
+    pub exact: bool,
 }
 
 impl Positives {
     pub const fn min(min: u32) -> Self {
-        Positives { min, max: None }
+        Positives {
+            min,
+            max: None,
+            exact: false,
+        }
     }
 
     pub const fn min_max(min: u32, max: u32) -> Self {
         Positives {
             min,
             max: Some(max),
+            exact: false,
         }
     }
 }
+
+/// No VirusTotal hits, but benign today doesn't mean benign tomorrow.
+pub const BENIGN: Positives = Positives {
+    min: 0,
+    max: Some(0),
+    exact: true,
+};
 
 impl Default for Positives {
     fn default() -> Self {
         // This is definitely arbitrary, but 5 or more hits probably is something not wanted
         // on a computer system
-        Positives { min: 5, max: None }
+        Positives {
+            min: 5,
+            max: None,
+            exact: false,
+        }
     }
 }
 
 impl Display for Positives {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        if self.exact {
+            return write!(f, "positives:{}", self.min);
+        }
+
         write!(f, "positives:{}+", self.min)?;
 
         if let Some(max) = self.max {
@@ -211,6 +234,11 @@ impl Add<Positives> for FileTypes {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn benign() {
+        assert_eq!(BENIGN.to_string(), "positives:0");
+    }
 
     #[test]
     fn types_positives() {
