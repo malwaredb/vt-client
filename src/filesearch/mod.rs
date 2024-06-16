@@ -1,3 +1,5 @@
+pub mod flags;
+
 use serde::{Deserialize, Serialize};
 
 /// Response from VirusTotal for a file search
