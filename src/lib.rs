@@ -1,11 +1,13 @@
 pub mod errors;
 pub mod filereport;
 pub mod filerescan;
+pub mod filesearch;
 
 use crate::filereport::{FileReportData, FileReportRequestResponse};
 use crate::filerescan::{FileRescanRequestData, FileRescanRequestResponse};
-use std::borrow::Cow;
+use crate::filesearch::FileSearchResponse;
 
+use std::borrow::Cow;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 use std::string::FromUtf8Error;
@@ -225,6 +227,54 @@ impl VirusTotalClient {
         let body = response.bytes().await?;
 
         Ok(body.to_vec())
+    }
+
+    /// Search VirusTotal for files matching some search parameters. Requires VT Premium!
+    /// For more information see https://virustotal.readme.io/v2.0/reference/file-search.
+    /// Note: This uses the V2 API.
+    pub async fn search(&self, query: &str) -> Result<FileSearchResponse, VirusTotalError> {
+        let url = format!(
+            "https://www.virustotal.com/vtapi/v2/file/search?apikey={}&query={query}",
+            self.key.as_str()
+        );
+
+        let body = reqwest::get(url).await?.bytes().await?;
+        let json_response = String::from_utf8(body.to_ascii_lowercase())?;
+        let response: FileSearchResponse = serde_json::from_str(&json_response)?;
+
+        let response = FileSearchResponse {
+            response_code: response.response_code,
+            offset: response.offset,
+            hashes: response.hashes,
+            query: query.to_string(),
+        };
+        Ok(response)
+    }
+
+    /// Search VirusTotal for files matching some search parameters. Requires VT Premium!
+    /// Use this to continue from a prior search for the next 300 results.
+    pub async fn search_offset(
+        &self,
+        prior: &FileSearchResponse,
+    ) -> Result<FileSearchResponse, VirusTotalError> {
+        let url = format!(
+            "https://www.virustotal.com/vtapi/v2/file/search?apikey={}&query={}&offset={}",
+            self.key.as_str(),
+            prior.query,
+            prior.offset
+        );
+
+        let body = reqwest::get(url).await?.bytes().await?;
+        let json_response = String::from_utf8(body.to_ascii_lowercase())?;
+        let response: FileSearchResponse = serde_json::from_str(&json_response)?;
+
+        let response = FileSearchResponse {
+            response_code: response.response_code,
+            offset: response.offset,
+            hashes: response.hashes,
+            query: prior.query.clone(),
+        };
+        Ok(response)
     }
 }
 

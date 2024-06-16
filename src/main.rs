@@ -46,6 +46,12 @@ struct HashArg {
     pub hash: String,
 }
 
+#[derive(Parser, Clone)]
+struct StringArg {
+    /// Search for files matching some criteria, returns hashes. Requires VT Premium!
+    pub search: String,
+}
+
 impl HashArg {
     pub fn valid(&self) -> bool {
         self.hash.len() == 32 || self.hash.len() == 40 || self.hash.len() == 64
@@ -65,8 +71,11 @@ enum Action {
     /// Request re-analysis of a file based on a hash (MD5, SHA-1, or SHA-256)
     Rescan(HashArg),
 
-    /// Download a file based on a hash (MD5, SHA-1, or SHA-256)
+    /// Download a file based on a hash (MD5, SHA-1, or SHA-256). Requires VT Premium!
     Download(HashArg),
+
+    /// Search for files matching some criteria, returns hashes. Requires VT Premium!
+    Search(StringArg),
 }
 
 impl Action {
@@ -151,6 +160,16 @@ impl Action {
                 }
                 let response = client.download(&arg.hash).await?;
                 std::fs::write(&arg.hash, response)?;
+            }
+            Action::Search(arg) => {
+                let response = client.search(&arg.search).await?;
+                if response.hashes.is_empty() {
+                    println!("Nothing found.");
+                } else {
+                    for hash in response.hashes {
+                        println!("{hash}");
+                    }
+                }
             }
         }
 
