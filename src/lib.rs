@@ -235,10 +235,11 @@ impl VirusTotalClient {
     /// Example:
     ///
     /// ```rust,compile_fail
-    /// use malwaredb_virustotal::{VirusTotalClient, filesearch};
+    /// use malwaredb_virustotal::{VirusTotalClient, filesearch::flags};
     ///
     /// let client = VirusTotalClient::new(std::env::var("VT_API_KEY").unwrap());
-    /// let result = client.search(filesearch::flags::FileType::Pdf + filesearch::flags::BENIGN).await?;
+    /// // Find PDFs, which are benign, have a fill-able form, and Javascript
+    /// let result = client.search(flags::FileType::Pdf + flags::BENIGN + flags::Tag::PdfForm + flags::Tag::PdfJs).await?;
     /// ```
     pub async fn search<Q>(&self, query: Q) -> Result<FileSearchResponse, VirusTotalError>
     where

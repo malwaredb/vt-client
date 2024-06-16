@@ -137,6 +137,90 @@ impl Display for FileTypes {
     }
 }
 
+/// File attributes, many are file-type specific. Be sure to not use a [Tag] which is not
+/// appropriate for the [FileType] being sought.
+#[derive(Copy, Clone, Debug, Hash)]
+pub enum Tag {
+    /// PE32 file which uses the .Net Framework (CLR)
+    DotNetAssembly,
+
+    /// If the executable is 64-bit
+    Executable64bit,
+
+    /// PE32 file runs in the EFI environment
+    ExecutableEFI,
+
+    /// If the PE32 or Mach-O file has an embedded signature
+    ExecutableSigned,
+
+    /// If the sample makes use of a known exploit
+    Exploit,
+
+    /// Sample was caught in the wild with a honeypot system
+    Honeypot,
+
+    /// Microsoft Office file with macro(s)
+    MSOfficeMacro,
+
+    /// PDF document which does something when viewed
+    PdfAutoAction,
+
+    /// PDF document with some other file(s) embedded
+    PdfEmbeddedFile,
+
+    /// PDF document with a fillable form
+    PdfForm,
+
+    /// PDF document with embedded Javascript
+    PdfJs,
+
+    /// PDF document which executes Javascript when opened
+    PdfLaunchAction,
+}
+
+impl Display for Tag {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Tag::DotNetAssembly => write!(f, "tag:assembly"),
+            Tag::Executable64bit => write!(f, "tag:64bits"),
+            Tag::ExecutableEFI => write!(f, "tag:efi"),
+            Tag::ExecutableSigned => write!(f, "tag:signed"),
+            Tag::Exploit => write!(f, "tag:exploit"),
+            Tag::Honeypot => write!(f, "tag:honeypot"),
+            Tag::MSOfficeMacro => write!(f, "tag:macros"),
+            Tag::PdfAutoAction => write!(f, "tag:autoaction"),
+            Tag::PdfEmbeddedFile => write!(f, "tag:file-embedded"),
+            Tag::PdfForm => write!(f, "tag:acroform"),
+            Tag::PdfJs => write!(f, "tag:js-embedded"),
+            Tag::PdfLaunchAction => write!(f, "tag:launch-action"),
+        }
+    }
+}
+
+impl BitOr for Tag {
+    type Output = String;
+
+    fn bitor(self, rhs: Self) -> Self::Output {
+        format!("{self} {rhs}")
+    }
+}
+
+/// [Vec<Tag>] with [Display] already implemented.
+#[derive(Clone, Debug, Hash)]
+pub struct Tags(pub Vec<Tag>);
+
+impl Display for Tags {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let combined = self
+            .0
+            .iter()
+            .map(|t| t.to_string())
+            .collect::<Vec<String>>()
+            .join(" ");
+        write!(f, "{combined}")
+    }
+}
+
 /// Antivirus hit results, with optional upper bound.
 #[derive(Copy, Clone, Debug, Hash)]
 pub struct Positives {
@@ -217,6 +301,34 @@ impl Add<Positives> for FileType {
     }
 }
 
+impl Add<Tag> for FileType {
+    type Output = String;
+    fn add(self, rhs: Tag) -> Self::Output {
+        format!("{self} {rhs}")
+    }
+}
+
+impl Add<Tags> for FileType {
+    type Output = String;
+    fn add(self, rhs: Tags) -> Self::Output {
+        format!("{self} {rhs}")
+    }
+}
+
+impl Add<Positives> for Tag {
+    type Output = String;
+    fn add(self, rhs: Positives) -> Self::Output {
+        format!("{self} {rhs}")
+    }
+}
+
+impl Add<Positives> for Tags {
+    type Output = String;
+    fn add(self, rhs: Positives) -> Self::Output {
+        format!("{self} {rhs}")
+    }
+}
+
 impl Add<FileTypes> for Positives {
     type Output = String;
     fn add(self, rhs: FileTypes) -> Self::Output {
@@ -227,6 +339,38 @@ impl Add<FileTypes> for Positives {
 impl Add<Positives> for FileTypes {
     type Output = String;
     fn add(self, rhs: Positives) -> Self::Output {
+        format!("{self} {rhs}")
+    }
+}
+
+impl Add<String> for Tag {
+    type Output = String;
+
+    fn add(self, rhs: String) -> Self::Output {
+        format!("{rhs} {self}")
+    }
+}
+
+impl Add<String> for Tags {
+    type Output = String;
+
+    fn add(self, rhs: String) -> Self::Output {
+        format!("{rhs} {self}")
+    }
+}
+
+impl Add<Tag> for String {
+    type Output = String;
+
+    fn add(self, rhs: Tag) -> Self::Output {
+        format!("{self} {rhs}")
+    }
+}
+
+impl Add<Tags> for String {
+    type Output = String;
+
+    fn add(self, rhs: Tags) -> Self::Output {
         format!("{self} {rhs}")
     }
 }
@@ -243,7 +387,11 @@ mod tests {
     #[test]
     fn types_positives() {
         let types: String = FileTypes(vec![FileType::MachO, FileType::Dos, FileType::WindowsMSI])
-            + Positives::default();
-        assert_eq!(types, "type:macho OR type:dos OR type:msi positives:5+");
+            + Positives::default()
+            + Tag::ExecutableSigned;
+        assert_eq!(
+            types,
+            "type:macho OR type:dos OR type:msi positives:5+ tag:signed"
+        );
     }
 }
