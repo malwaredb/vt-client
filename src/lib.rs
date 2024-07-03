@@ -238,8 +238,8 @@ impl VirusTotalClient {
     /// use malwaredb_virustotal::{VirusTotalClient, filesearch::flags};
     ///
     /// let client = VirusTotalClient::new(std::env::var("VT_API_KEY").unwrap());
-    /// // Find PDFs, which are benign, have a fill-able form, and Javascript
-    /// let result = client.search(flags::FileType::Pdf + flags::BENIGN + flags::Tag::PdfForm + flags::Tag::PdfJs).await?;
+    /// // Find PDFs, which are benign, have a fill-able form, and Javascript, first seen yesterday
+    /// let result = client.search(flags::FileType::Pdf + flags::BENIGN + flags::Tag::PdfForm + flags::Tag::PdfJs + flags::FirstSubmission::days(1)).await?;
     /// ```
     pub async fn search<Q>(&self, query: Q) -> Result<FileSearchResponse, VirusTotalError>
     where

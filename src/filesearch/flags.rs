@@ -1,5 +1,7 @@
-use std::fmt::{Display, Formatter};
-use std::ops::{Add, BitOr};
+use std::fmt::{Debug, Display, Formatter};
+use std::ops::{Add, BitOr, Shl, Shr};
+
+use chrono::{DateTime, Days, Utc};
 
 // See https://docs.virustotal.com/docs/file-search-modifiers for the complete list of flags.
 
@@ -287,6 +289,163 @@ impl Display for Positives {
     }
 }
 
+/// Find files submitted on or after a specific date, or within a date range
+#[derive(Clone, Debug, Hash, Eq, PartialEq)]
+pub struct FirstSubmission {
+    /// First seen date & time
+    pub first: DateTime<Utc>,
+
+    /// Second date & time for a range
+    pub second: Option<DateTime<Utc>>,
+
+    /// If true, then only find files submitted at the first date
+    pub exact: bool,
+
+    /// For date vs datetime. Use only the specified formats [FirstSubmission::FORMAT_DATE] or
+    /// [FirstSubmission::FORMATE_DATE_TIME], otherwise there will likely be errors or empty results
+    pub format: &'static str,
+}
+
+impl FirstSubmission {
+    pub const FORMAT_DATE: &'static str = "%Y-%m-%d";
+    pub const FORMAT_DATETIME: &'static str = "%Y-%m-%dT%H:%M:%S";
+
+    /// Only submitted at a specific date
+    pub fn at_date(start: DateTime<Utc>) -> Self {
+        Self {
+            first: start,
+            second: None,
+            exact: true,
+            format: Self::FORMAT_DATE,
+        }
+    }
+
+    /// Only submitted at a specific date and time
+    pub fn at_datetime(start: DateTime<Utc>) -> Self {
+        Self {
+            first: start,
+            second: None,
+            exact: true,
+            format: Self::FORMAT_DATETIME,
+        }
+    }
+
+    /// First submitted on or after a specific date
+    pub fn from_date(start: DateTime<Utc>) -> Self {
+        Self {
+            first: start,
+            second: None,
+            exact: false,
+            format: Self::FORMAT_DATE,
+        }
+    }
+
+    /// First submitted on or after a specific date and time
+    pub fn from_datetime(start: DateTime<Utc>) -> Self {
+        Self {
+            first: start,
+            second: None,
+            exact: false,
+            format: Self::FORMAT_DATETIME,
+        }
+    }
+
+    /// Builder: Set the end date
+    pub fn until_date(self, end: DateTime<Utc>) -> Self {
+        Self {
+            first: self.first,
+            second: Some(end),
+            exact: false,
+            format: self.format,
+        }
+    }
+
+    /// Submitted on or after some [Days] ago
+    pub fn days(days: u32) -> Self {
+        let start = Utc::now() - Days::new(days as u64);
+        Self {
+            first: start,
+            second: None,
+            exact: false,
+            format: Self::FORMAT_DATE,
+        }
+    }
+}
+
+impl Display for FirstSubmission {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        if self.exact {
+            return write!(f, "fs:{}", self.first.format(self.format));
+        }
+
+        write!(f, "fs:{}+", self.first.format(self.format))?;
+
+        if let Some(second) = self.second {
+            write!(f, " fs:{}-", second.format(self.format))
+        } else {
+            write!(f, "")
+        }
+    }
+}
+
+impl Add<Days> for FirstSubmission {
+    type Output = FirstSubmission;
+
+    /// Add [Days] to the end date, creating relative to start if not present
+    fn add(self, rhs: Days) -> Self::Output {
+        let end = if let Some(end) = self.second {
+            end + rhs
+        } else {
+            self.first + rhs
+        };
+
+        Self {
+            first: self.first,
+            second: Some(end),
+            exact: self.exact,
+            format: self.format,
+        }
+    }
+}
+
+impl Shl<Days> for FirstSubmission {
+    type Output = Self;
+
+    /// Shift both the start and end dates forward by some amount of [Days]. Does not create
+    /// and end date if it doesn't exist.
+    #[allow(clippy::suspicious_arithmetic_impl)]
+    fn shl(self, rhs: Days) -> Self::Output {
+        let start = self.first + rhs;
+        let end = self.second.map(|second| second + rhs);
+
+        Self {
+            first: start,
+            second: end,
+            exact: self.exact,
+            format: self.format,
+        }
+    }
+}
+
+impl Shr<Days> for FirstSubmission {
+    type Output = Self;
+
+    /// Shift both the start and dates backward by some amount of [Days]. Does not create
+    /// and end date if it doesn't exist.
+    #[allow(clippy::suspicious_arithmetic_impl)]
+    fn shr(self, rhs: Days) -> Self::Output {
+        let start = self.first - rhs;
+        let end = self.second.map(|second| second - rhs);
+
+        Self {
+            first: start,
+            second: end,
+            exact: self.exact,
+            format: self.format,
+        }
+    }
+}
+
 impl Add<FileType> for Positives {
     type Output = String;
     fn add(self, rhs: FileType) -> Self::Output {
@@ -315,6 +474,13 @@ impl Add<Tags> for FileType {
     }
 }
 
+impl Add<FirstSubmission> for FileType {
+    type Output = String;
+    fn add(self, rhs: FirstSubmission) -> Self::Output {
+        format!("{self} {rhs}")
+    }
+}
+
 impl Add<Positives> for Tag {
     type Output = String;
     fn add(self, rhs: Positives) -> Self::Output {
@@ -325,6 +491,13 @@ impl Add<Positives> for Tag {
 impl Add<Positives> for Tags {
     type Output = String;
     fn add(self, rhs: Positives) -> Self::Output {
+        format!("{self} {rhs}")
+    }
+}
+
+impl Add<FirstSubmission> for Tag {
+    type Output = String;
+    fn add(self, rhs: FirstSubmission) -> Self::Output {
         format!("{self} {rhs}")
     }
 }
@@ -343,6 +516,27 @@ impl Add<Positives> for FileTypes {
     }
 }
 
+impl Add<String> for FileTypes {
+    type Output = String;
+    fn add(self, rhs: String) -> Self::Output {
+        format!("{self} {rhs}")
+    }
+}
+impl Add<FirstSubmission> for FileTypes {
+    type Output = String;
+    fn add(self, rhs: FirstSubmission) -> Self::Output {
+        format!("{self} {rhs}")
+    }
+}
+
+impl Add<String> for Tags {
+    type Output = String;
+
+    fn add(self, rhs: String) -> Self::Output {
+        format!("{rhs} {self}")
+    }
+}
+
 impl Add<String> for Tag {
     type Output = String;
 
@@ -351,10 +545,10 @@ impl Add<String> for Tag {
     }
 }
 
-impl Add<String> for Tags {
+impl Add<FirstSubmission> for Tags {
     type Output = String;
 
-    fn add(self, rhs: String) -> Self::Output {
+    fn add(self, rhs: FirstSubmission) -> Self::Output {
         format!("{rhs} {self}")
     }
 }
@@ -375,8 +569,66 @@ impl Add<Tags> for String {
     }
 }
 
+impl Add<FileType> for String {
+    type Output = String;
+
+    fn add(self, rhs: FileType) -> Self::Output {
+        format!("{self} {rhs}")
+    }
+}
+
+impl Add<FirstSubmission> for String {
+    type Output = String;
+
+    fn add(self, rhs: FirstSubmission) -> Self::Output {
+        format!("{self} {rhs}")
+    }
+}
+
+impl Add<FileType> for FirstSubmission {
+    type Output = String;
+
+    fn add(self, rhs: FileType) -> Self::Output {
+        format!("{self} {rhs}")
+    }
+}
+
+impl Add<Positives> for FirstSubmission {
+    type Output = String;
+
+    fn add(self, rhs: Positives) -> Self::Output {
+        format!("{self} {rhs}")
+    }
+}
+
+impl Add<String> for FirstSubmission {
+    type Output = String;
+
+    fn add(self, rhs: String) -> Self::Output {
+        format!("{self} {rhs}")
+    }
+}
+
+impl Add<Tag> for FirstSubmission {
+    type Output = String;
+
+    fn add(self, rhs: Tag) -> Self::Output {
+        format!("{self} {rhs}")
+    }
+}
+
+impl Add<Tags> for FirstSubmission {
+    type Output = String;
+
+    fn add(self, rhs: Tags) -> Self::Output {
+        format!("{self} {rhs}")
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use chrono::TimeZone;
+
     use super::*;
 
     #[test]
@@ -393,5 +645,29 @@ mod tests {
             types,
             "type:macho OR type:dos OR type:msi positives:5+ tag:signed"
         );
+    }
+
+    #[test]
+    fn first_submission() {
+        let first =
+            FirstSubmission::at_datetime(Utc.with_ymd_and_hms(2015, 5, 15, 10, 20, 30).unwrap());
+        assert_eq!(first.to_string(), "fs:2015-05-15T10:20:30");
+
+        let first =
+            FirstSubmission::at_datetime(Utc.with_ymd_and_hms(2015, 5, 15, 10, 20, 30).unwrap());
+        let first = first.until_date(Utc.with_ymd_and_hms(2015, 12, 30, 23, 59, 59).unwrap());
+        assert_eq!(
+            first.to_string(),
+            "fs:2015-05-15T10:20:30+ fs:2015-12-30T23:59:59-"
+        );
+
+        let shifted_forward = first.clone() << Days::new(1);
+        assert_eq!(
+            shifted_forward.to_string(),
+            "fs:2015-05-16T10:20:30+ fs:2015-12-31T23:59:59-"
+        );
+
+        let shifted_back = shifted_forward >> Days::new(1);
+        assert_eq!(shifted_back, first);
     }
 }
