@@ -520,6 +520,7 @@ name = "malwaredb-virustotal"
 version = "0.0.8"
 dependencies = [
  "anyhow",
+ "bytes",
  "chrono",
  "clap",
  "hex",

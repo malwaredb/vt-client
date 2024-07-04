@@ -12,6 +12,7 @@ use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 use std::string::FromUtf8Error;
 
+use bytes::Bytes;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::multipart::Form;
 use serde::{Deserialize, Serialize};
@@ -287,6 +288,19 @@ impl VirusTotalClient {
             query: prior.query.clone(),
         };
         Ok(response)
+    }
+
+    /// Since this crate doesn't support every Virus Total feature, this function can receive a
+    /// URL fragment and return the response.
+    pub async fn other(&self, url: &str) -> reqwest::Result<Bytes> {
+        let client = reqwest::Client::new();
+        client
+            .get(format!("https://www.virustotal.com/api/v3/{url}"))
+            .headers(self.header())
+            .send()
+            .await?
+            .bytes()
+            .await
     }
 }
 
