@@ -1,4 +1,4 @@
-## MalwareDB VirusTotal Client
+## VirusTotal Client
 [![Test](https://github.com/malwaredb/vt-client/actions/workflows/test.yml/badge.svg)](https://github.com/malwaredb/vt-client/actions/workflows/test.yml)[![Lint](https://github.com/malwaredb/vt-client/actions/workflows/lint.yml/badge.svg)](https://github.com/malwaredb/vt-client/actions/workflows/lint.yml)[![Crates.io Version](https://img.shields.io/crates/v/malwaredb-virustotal)](https://crates.io/crates/malwaredb-virustotal)[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/malwaredb/vt-client/badge)](https://securityscorecards.dev/viewer/?uri=github.com/malwaredb/vt-client)
 
 This is logic for interacting with [VirusTotal](https://www.virustotal.com)'s [V3 API](https://virustotal.readme.io/reference/overview). At present, only the following actions are supported:
