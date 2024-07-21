@@ -1,3 +1,5 @@
+/// Flags for an easier way of specifying what's being sought in VirusTotal, enabling the use
+/// of Rust objects to build out the syntax expected by VirusTotal.
 pub mod flags;
 
 use serde::{Deserialize, Serialize};

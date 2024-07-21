@@ -4,21 +4,29 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
+/// File rescan response, which could return data (success confirmation) or an error message
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum FileRescanRequestResponse {
+    /// Information about the rescan request
     #[serde(rename = "data")]
     Data(FileRescanRequestData),
+
+    /// Error message, file rescan not successful
     #[serde(rename = "error")]
     Error(VirusTotalError),
 }
 
+/// Successful file rescan response contents
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FileRescanRequestData {
+    /// Rescan type, probably "analysis"
     #[serde(rename = "type")]
     pub rescan_type: String,
 
+    /// Rescan ID, likely not useful
     pub id: String,
 
+    /// Links to the file analysis
     pub links: HashMap<String, String>,
 }
 

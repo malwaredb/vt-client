@@ -237,6 +237,7 @@ pub struct Positives {
 }
 
 impl Positives {
+    /// Specify some minimum amount of antivirus hits, but no maximum
     pub const fn min(min: u32) -> Self {
         Positives {
             min,
@@ -245,6 +246,7 @@ impl Positives {
         }
     }
 
+    /// Specify a minimum and maximum antivirus hits
     pub const fn min_max(min: u32, max: u32) -> Self {
         Positives {
             min,
@@ -307,7 +309,9 @@ pub struct FirstSubmission {
 }
 
 impl FirstSubmission {
+    /// Year-Month-Day format for courser file submission selection
     pub const FORMAT_DATE: &'static str = "%Y-%m-%d";
+    /// Year-Month-Day Hour-Minute-Second for finer file submission selection
     pub const FORMAT_DATETIME: &'static str = "%Y-%m-%dT%H:%M:%S";
 
     /// Only submitted at a specific date

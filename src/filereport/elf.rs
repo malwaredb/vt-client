@@ -53,6 +53,7 @@ pub struct ElfSection {
 }
 
 /// ELF header
+/// https://virustotal.readme.io/reference/elf_info
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ElfHeader {
     /// ELF version, should be 1
@@ -62,8 +63,10 @@ pub struct ElfHeader {
     #[serde(rename = "type")]
     pub elf_type: String,
 
+    /// 0x1 for original and current ELF files
     pub obj_version: String,
 
+    /// Extra information about the ELF binary
     pub data: String,
 
     /// Instruction Set Architecture
@@ -75,8 +78,10 @@ pub struct ElfHeader {
     /// SystemV, FreeBSD, OpenBSD, etc
     pub os_abi: String,
 
+    /// ABI version, ignored for static files
     pub abi_version: u32,
 
+    /// Entry point address
     pub entrypoint: u64,
 
     /// Number of program headers
@@ -89,16 +94,21 @@ pub struct ElfHeader {
 /// Imported or Exported ELF symbols
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ElfImportExport {
+    /// Symbol type
     #[serde(rename = "type")]
     pub export_type: String,
+
+    /// Symbol name
     pub name: String,
 }
 
-/// ELF Segment
+/// ELF Program Segment
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ElfSegment {
+    /// Segment type
     pub segment_type: String,
 
+    /// Segment resources (related sections)
     #[serde(default)]
     pub resources: Vec<String>,
 }

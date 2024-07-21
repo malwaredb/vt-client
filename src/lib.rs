@@ -1,6 +1,15 @@
+#![doc = include_str!("../README.md")]
+#![deny(missing_docs)]
+#![deny(clippy::all)]
+#![forbid(unsafe_code)]
+
+/// Pre-defined error types for Virus Total
 pub mod errors;
+/// Logic for parsing the file report data from VirusTotal
 pub mod filereport;
+/// Logic for parsing the result from a file rescan request
 pub mod filerescan;
+/// Logic for searching for files based on types, submission, and attributes
 pub mod filesearch;
 
 use crate::filereport::{FileReportData, FileReportRequestResponse};

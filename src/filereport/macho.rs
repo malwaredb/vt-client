@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// Parsed formation for Mach-O binaries
+/// https://virustotal.readme.io/reference/macho_info
 /// https://en.wikipedia.org/wiki/Mach-O
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct MachoInfo {
@@ -16,6 +17,7 @@ pub struct MachoInfo {
     pub segments: Vec<MachoSegment>,
 }
 
+/// Mach-O header
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct MachoHeader {
     /// Magic number for the header
@@ -41,9 +43,11 @@ pub struct MachoHeader {
     pub cpu_subtype: String,
 }
 
+/// Mach-O Load Commands
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct MachoCommands(pub Vec<HashMap<String, String>>);
 
+/// Mach-O Segment information
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct MachoSegment {
     /// Segment name
@@ -63,12 +67,17 @@ pub struct MachoSegment {
     pub sections: Vec<MachoSection>,
 }
 
+/// Mach-O Section information
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct MachoSection {
+    /// Section flags
     #[serde(default)]
     pub flags: Vec<String>,
+
+    /// Section name
     pub name: String,
 
+    /// Section type
     #[serde(rename = "type")]
     pub section_type: String,
 }

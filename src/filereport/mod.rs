@@ -1,5 +1,10 @@
+/// Report details for a Linux/Unix/BSD file
 pub mod elf;
+
+/// Report details for a Mach-O file
 pub mod macho;
+
+/// Report details for a PE32 file
 pub mod pe;
 
 use crate::VirusTotalError;
@@ -9,22 +14,33 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+/// File report response, which could return data (success confirmation) or an error message
 #[allow(clippy::large_enum_variant)]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum FileReportRequestResponse {
+    /// Information about the report request
     #[serde(rename = "data")]
     Data(FileReportData),
+
+    /// Error message, file report request not successful
     #[serde(rename = "error")]
     Error(VirusTotalError),
 }
 
+/// Successful file report request response contents
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FileReportData {
+    /// The file report details, the interesting part
     pub attributes: ScanResultAttributes,
 
+    /// Report type, probably "file"
     #[serde(rename = "type")]
     pub record_type: String,
+
+    /// Report ID, also the file's SHA-256 hash
     pub id: String,
+
+    /// Link to the file report
     pub links: HashMap<String, String>,
 }
 
@@ -141,6 +157,7 @@ pub struct ScanResultAttributes {
     #[serde(default)]
     pub sigma_analysis_summary: HashMap<String, serde_json::Value>,
 
+    /// Sigma results, if available
     #[serde(default)]
     pub sigma_analysis_stats: Option<SigmaAnalysisStats>,
 
@@ -193,6 +210,7 @@ pub struct ScanResultAttributes {
     pub extra: HashMap<String, serde_json::Value>,
 }
 
+/// Community votes whether a file is benign or malicious
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Votes {
     /// Votes that the file is harmless
@@ -202,17 +220,23 @@ pub struct Votes {
     pub malicious: u32,
 }
 
+/// Popular threat classification contains threat information pulled from antivirus results
+/// https://virustotal.readme.io/reference/popular_threat_classification
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PopularThreatClassification {
+    /// Popular threat category and name
     pub suggested_threat_label: String,
 
+    /// Threat categories or types, if available; examples might be "ransomware" or "trojan"
     #[serde(default)]
     pub popular_threat_category: Vec<PopularThreatClassificationInner>,
 
+    /// Threat name(s) from antivirus results, if available
     #[serde(default)]
     pub popular_threat_name: Vec<PopularThreatClassificationInner>,
 }
 
+/// Popular thread classification details
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PopularThreatClassificationInner {
     /// Votes for this threat type
@@ -244,6 +268,9 @@ pub struct AnalysisResult {
     pub engine_update: Option<String>,
 }
 
+/// File type based on TrID
+/// https://virustotal.readme.io/reference/files-object-trid
+/// https://mark0.net/soft-trid-e.html
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct TrID {
     /// Detected file type
@@ -256,20 +283,34 @@ pub struct TrID {
 /// Output from Detect It Easy https://github.com/horsicq/Detect-It-Easy
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DetectItEasy {
+    /// File type
     pub filetype: String,
+
+    /// Details
     #[serde(default)]
     pub values: Vec<DetectItEasyValues>,
 }
 
+/// File type from Detect It Easy
+/// https://virustotal.readme.io/reference/detectiteasy
+/// https://github.com/horsicq/Detect-It-Easy
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DetectItEasyValues {
+    /// Artifacts detected in the file
     pub info: Option<String>,
+
+    /// File type
     #[serde(rename = "type")]
     pub detection_type: String,
+
+    /// Name of the file
     pub name: String,
+
+    /// Version
     pub version: Option<String>,
 }
 
+/// Last Analysis Stats
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct LastAnalysisStats {
     /// Antivirus products which indicate this file is harmless
@@ -324,26 +365,63 @@ impl LastAnalysisStats {
     }
 }
 
+/// Sandbox verdicts
+/// https://virustotal.readme.io/reference/sandbox_verdicts
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SandboxVerdict {
-    pub category: String,
+    /// Sandbox verdict
+    pub category: SandboxVerdictCategory,
 
     /// Verdict confidence from 0 to 100.
     pub confidence: u8,
+
+    /// Name of the sandbox environment
     pub sandbox_name: String,
 
+    /// Raw sandbox verdicts
     #[serde(default)]
     pub malware_classification: Vec<String>,
 }
 
+/// Sandbox verdicts
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub enum SandboxVerdictCategory {
+    /// Sample was suspicious
+    #[serde(alias = "suspicious", alias = "Suspicious")]
+    Suspicious,
+
+    /// Sample was malicious
+    #[serde(alias = "malicious", alias = "Malicious")]
+    Malicious,
+
+    /// Sample was harmless
+    #[serde(alias = "harmless", alias = "Harmless")]
+    Harmless,
+
+    /// Threat not detected
+    #[serde(alias = "undetected", alias = "Undetected")]
+    Undetected,
+}
+
+/// Sigma analysis stats
+/// https://virustotal.readme.io/reference/sigma_analysis_stats
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SigmaAnalysisStats {
+    /// Number of matched low severity rules.
     pub low: u64,
+
+    /// Number of matched medium severity rules.
     pub medium: u64,
+
+    /// Number of matched high severity rules
     pub high: u64,
+
+    /// Number of matched critical severity rules.
     pub critical: u64,
 }
 
+/// Sigma analysis results
+/// https://virustotal.readme.io/reference/sigma_analysis_results
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SigmaAnalysisResults {
     /// Sigma rule title
