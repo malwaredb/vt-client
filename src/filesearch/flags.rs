@@ -3,9 +3,8 @@ use std::ops::{Add, BitOr, Shl, Shr};
 
 use chrono::{DateTime, Days, Utc};
 
-// See https://docs.virustotal.com/docs/file-search-modifiers for the complete list of flags.
-
-/// File types to search for
+/// File types available for searching
+/// See https://docs.virustotal.com/docs/file-search-modifiers for the complete list of flags.
 #[derive(Copy, Clone, Debug, Hash)]
 pub enum FileType {
     /// Non-Linux Unix file, Common Object File Format

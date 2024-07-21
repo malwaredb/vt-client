@@ -154,10 +154,14 @@ pub struct ScanResultAttributes {
     pub last_analysis_stats: LastAnalysisStats,
 
     /// Dictionary containing the number of matched Sigma rules group by its severity
+    /// https://blog.virustotal.com/2021/05/context-is-king-part-i-crowdsourced.html
+    /// https://virustotal.readme.io/docs/crowdsourced-sigma-rules
     #[serde(default)]
     pub sigma_analysis_summary: HashMap<String, serde_json::Value>,
 
     /// Sigma results, if available
+    /// https://blog.virustotal.com/2021/05/context-is-king-part-i-crowdsourced.html
+    /// https://virustotal.readme.io/docs/crowdsourced-sigma-rules
     #[serde(default)]
     pub sigma_analysis_stats: Option<SigmaAnalysisStats>,
 
@@ -178,7 +182,7 @@ pub struct ScanResultAttributes {
     pub reputation: u32,
 
     /// Mach-O details, if a Mach-O file (macOS, iOS, etc)
-    /// This is a vector since there is a separate `macho::MachInfo` struct per
+    /// This is a vector since there is a separate [macho::MachInfo] struct per
     /// each architecture if this is a Fat Mach-O file.
     pub macho_info: Option<Vec<macho::MachoInfo>>,
 
@@ -384,6 +388,7 @@ pub struct SandboxVerdict {
 }
 
 /// Sandbox verdicts
+/// https://virustotal.readme.io/reference/sandbox_verdicts
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum SandboxVerdictCategory {
     /// Sample was suspicious
@@ -405,6 +410,7 @@ pub enum SandboxVerdictCategory {
 
 /// Sigma analysis stats
 /// https://virustotal.readme.io/reference/sigma_analysis_stats
+/// https://virustotal.readme.io/docs/crowdsourced-sigma-rules
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SigmaAnalysisStats {
     /// Number of matched low severity rules.
@@ -422,6 +428,7 @@ pub struct SigmaAnalysisStats {
 
 /// Sigma analysis results
 /// https://virustotal.readme.io/reference/sigma_analysis_results
+/// https://virustotal.readme.io/docs/crowdsourced-sigma-rules
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SigmaAnalysisResults {
     /// Sigma rule title
@@ -440,13 +447,13 @@ mod tests {
     use rstest::rstest;
 
     #[rstest]
-    #[case(include_str!("../../testdata/fff40032c3dc062147c530e3a0a5c7e6acda4d1f1369fbc994cddd3c19a2de88.json"), "Rich Text Format")]
-    #[case(include_str!("../../testdata/0001a1252300b4732e4a010a5dd13a291dcb8b0ebee6febedb5152dfb0bcd488.json"), "DOS COM")]
-    #[case(include_str!("../../testdata/001015aafcae8a6942366cbb0e7d39c0738752a7800c41ea1c655d47b0a4d04c.json"), "MS Word Document")]
-    #[case(include_str!("../../testdata/417c06700c3e899f0554654102fa064385bf1d3ecec32471ac488096d81bf38c.json"), "Win32 EXE")] // .Net
-    #[case(include_str!("../../testdata/b8e7a581d85807ea6659ea2f681bd16d5baa7017ff144aa3030aefba9cbcdfd3.json"), "Mach-O")]
-    #[case(include_str!("../../testdata/ddecc35aa198f401948c73a0d53fd93c4ecb770198ad7db308de026745c56b71.json"), "Win32 EXE")]
-    #[case(include_str!("../../testdata/de10ba5e5402b46ea975b5cb8a45eb7df9e81dc81012fd4efd145ed2dce3a740.json"), "ELF")]
+    #[case::rtf(include_str!("../../testdata/fff40032c3dc062147c530e3a0a5c7e6acda4d1f1369fbc994cddd3c19a2de88.json"), "Rich Text Format")]
+    #[case::com(include_str!("../../testdata/0001a1252300b4732e4a010a5dd13a291dcb8b0ebee6febedb5152dfb0bcd488.json"), "DOS COM")]
+    #[case::word(include_str!("../../testdata/001015aafcae8a6942366cbb0e7d39c0738752a7800c41ea1c655d47b0a4d04c.json"), "MS Word Document")]
+    #[case::exedotnet(include_str!("../../testdata/417c06700c3e899f0554654102fa064385bf1d3ecec32471ac488096d81bf38c.json"), "Win32 EXE")] // .Net
+    #[case::macho(include_str!("../../testdata/b8e7a581d85807ea6659ea2f681bd16d5baa7017ff144aa3030aefba9cbcdfd3.json"), "Mach-O")]
+    #[case::exe(include_str!("../../testdata/ddecc35aa198f401948c73a0d53fd93c4ecb770198ad7db308de026745c56b71.json"), "Win32 EXE")]
+    #[case::elf(include_str!("../../testdata/de10ba5e5402b46ea975b5cb8a45eb7df9e81dc81012fd4efd145ed2dce3a740.json"), "ELF")]
     fn deserialize_valid_report(#[case] report: &str, #[case] file_type: &str) {
         let report: FileReportRequestResponse =
             serde_json::from_str(report).expect("failed to deserialize VT report");
