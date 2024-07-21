@@ -139,15 +139,13 @@ impl VirusTotalClient {
 
     /// Request VirusTotal rescan a file for an MD5, SHA-1, or SHA-256 hash, which is assumed to be valid.
     ///
-    /// ```rust
+    /// ```rust,compile_fail
     /// use malwaredb_virustotal::VirusTotalClient;
     ///
     /// // Use of `.unwrap()` for demonstration, don't actually do this.
     /// let client = VirusTotalClient::new(std::env::var("VT_API_KEY").unwrap());
-    /// async {
-    ///     let response = client.request_rescan("abc91ba39ea3220d23458f8049ed900c16ce1023").await.unwrap();
-    ///     assert_eq!(response.rescan_type, "analysis");
-    /// };
+    /// let response = client.request_rescan("abc91ba39ea3220d23458f8049ed900c16ce1023").await.unwrap();
+    /// assert_eq!(response.rescan_type, "analysis");
     /// ```
     pub async fn request_rescan(
         &self,
@@ -220,14 +218,12 @@ impl VirusTotalClient {
 
     /// Download a file from VirusTotal, requires VirusTotal Premium!
     ///
-    /// ```rust
+    /// ```rust,compile_fail
     /// use malwaredb_virustotal::VirusTotalClient;
     ///
     /// // Use of `.unwrap()` for demonstration, don't actually do this.
     /// let client = VirusTotalClient::new(std::env::var("VT_API_KEY").unwrap());
-    /// let file_contents = async {
-    ///     client.download("abc91ba39ea3220d23458f8049ed900c16ce1023").await.unwrap()
-    /// };
+    /// let file_contents = client.download("abc91ba39ea3220d23458f8049ed900c16ce1023").await.unwrap();
     /// ```
     pub async fn download(&self, file_hash: &str) -> Result<Vec<u8>, VirusTotalError> {
         let client = reqwest::Client::new();
@@ -266,15 +262,13 @@ impl VirusTotalClient {
     /// Note: This uses the V2 API.
     /// Example:
     ///
-    /// ```rust
+    /// ```rust,compile_fail
     /// use malwaredb_virustotal::{VirusTotalClient, filesearch::flags};
     ///
     /// // Use of `.unwrap()` for demonstration, don't actually do this.
     /// let client = VirusTotalClient::new(std::env::var("VT_API_KEY").unwrap());
     /// // Find PDFs, which are benign, have a fill-able form, and Javascript, first seen yesterday
-    /// let result = async {
-    ///     client.search(flags::FileType::Pdf + flags::BENIGN + flags::Tag::PdfForm + flags::Tag::PdfJs + flags::FirstSubmission::days(1)).await.unwrap()
-    /// };
+    /// let result = client.search(flags::FileType::Pdf + flags::BENIGN + flags::Tag::PdfForm + flags::Tag::PdfJs + flags::FirstSubmission::days(1)).await.unwrap();
     /// ```
     pub async fn search<Q>(&self, query: Q) -> Result<FileSearchResponse, VirusTotalError>
     where
