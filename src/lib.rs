@@ -18,14 +18,14 @@ use crate::filerescan::{FileRescanRequestData, FileRescanRequestResponse};
 use crate::filesearch::FileSearchResponse;
 
 use std::borrow::Cow;
-use std::fmt::{Display, Formatter};
+use std::fmt::{Debug, Display, Formatter};
 use std::str::FromStr;
 use std::string::FromUtf8Error;
 
 use bytes::Bytes;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::multipart::Form;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
 use zeroize::Zeroizing;
 
 /// Capture the error from VirusTotal, plus parsing or networking errors along the way
@@ -86,10 +86,29 @@ impl From<FromUtf8Error> for VirusTotalError {
 }
 
 /// VirusTotal client object
-#[derive(Clone)]
+#[derive(Clone, Deserialize)]
 pub struct VirusTotalClient {
     /// The API key used to interact with VirusTotal
     key: Zeroizing<String>,
+}
+
+impl Debug for VirusTotalClient {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "VirusTotal Client v{}", env!("CARGO_PKG_VERSION"))
+    }
+}
+
+impl Serialize for VirusTotalClient {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        #[cfg(feature = "unsafe_serialization")]
+        return serializer.serialize_str(&self.key);
+
+        #[cfg(not(feature = "unsafe_serialization"))]
+        serializer.serialize_str("your-api-key-here")
+    }
 }
 
 impl VirusTotalClient {
