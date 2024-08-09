@@ -103,10 +103,10 @@ impl Serialize for VirusTotalClient {
     where
         S: Serializer,
     {
-        #[cfg(feature = "unsafe_serialization")]
+        #[cfg(feature = "unsafe-serialization")]
         return serializer.serialize_str(&self.key);
 
-        #[cfg(not(feature = "unsafe_serialization"))]
+        #[cfg(not(feature = "unsafe-serialization"))]
         serializer.serialize_str("your-api-key-here")
     }
 }
