@@ -134,10 +134,10 @@ impl VirusTotalClient {
         headers
     }
 
-    /// Get a file report from VirusTotal for an MD5, SHA-1, or SHA-256 hash, which is assumed to be valid.
-    pub async fn get_report(&self, file_hash: &str) -> Result<FileReportData, VirusTotalError> {
+    /// Get the unparsed file report from VirusTotal for an MD5, SHA-1, or SHA-256 hash, which is assumed to be valid.
+    pub async fn get_report_raw(&self, file_hash: &str) -> Result<Bytes, VirusTotalError> {
         let client = reqwest::Client::new();
-        let body = client
+        let bytes = client
             .get(format!(
                 "https://www.virustotal.com/api/v3/files/{file_hash}"
             ))
@@ -147,6 +147,12 @@ impl VirusTotalClient {
             .bytes()
             .await?;
 
+        Ok(bytes)
+    }
+
+    /// Get a parsed file report from VirusTotal for an MD5, SHA-1, or SHA-256 hash, which is assumed to be valid.
+    pub async fn get_report(&self, file_hash: &str) -> Result<FileReportData, VirusTotalError> {
+        let body = self.get_report_raw(file_hash).await?;
         let json_response = String::from_utf8(body.to_ascii_lowercase())?;
         let report: FileReportRequestResponse = serde_json::from_str(&json_response)?;
 
@@ -154,6 +160,23 @@ impl VirusTotalClient {
             FileReportRequestResponse::Data(data) => Ok(data),
             FileReportRequestResponse::Error(error) => Err(error),
         }
+    }
+
+    /// Request VirusTotal rescan a file for an MD5, SHA-1, or SHA-256 hash, and receive the unparsed response
+    pub async fn request_rescan_raw(&self, file_hash: &str) -> Result<Bytes, VirusTotalError> {
+        let client = reqwest::Client::new();
+        let bytes = client
+            .post(format!(
+                "https://www.virustotal.com/api/v3/files/{file_hash}/analyse"
+            ))
+            .headers(self.header())
+            .header("content-length", "0")
+            .send()
+            .await?
+            .bytes()
+            .await?;
+
+        Ok(bytes)
     }
 
     /// Request VirusTotal rescan a file for an MD5, SHA-1, or SHA-256 hash, which is assumed to be valid.
@@ -170,18 +193,7 @@ impl VirusTotalClient {
         &self,
         file_hash: &str,
     ) -> Result<FileRescanRequestData, VirusTotalError> {
-        let client = reqwest::Client::new();
-        let body = client
-            .post(format!(
-                "https://www.virustotal.com/api/v3/files/{file_hash}/analyse"
-            ))
-            .headers(self.header())
-            .header("content-length", "0")
-            .send()
-            .await?
-            .bytes()
-            .await?;
-
+        let body = self.request_rescan_raw(file_hash).await?;
         let json_response = String::from_utf8(body.to_ascii_lowercase())?;
         let report: FileRescanRequestResponse = serde_json::from_str(&json_response)?;
 
@@ -191,12 +203,8 @@ impl VirusTotalClient {
         }
     }
 
-    /// Submit a file to VirusTotal.
-    pub async fn submit<D, N>(
-        &self,
-        data: D,
-        name: Option<N>,
-    ) -> Result<FileRescanRequestData, VirusTotalError>
+    /// Submit a file to VirusTotal and receive the unparsed response.
+    pub async fn submit_raw<D, N>(&self, data: D, name: Option<N>) -> Result<Bytes, VirusTotalError>
     where
         D: Into<Cow<'static, [u8]>>,
         N: Into<Cow<'static, str>>,
@@ -216,7 +224,7 @@ impl VirusTotalClient {
             )
         };
 
-        let body = client
+        let bytes = client
             .post("https://www.virustotal.com/api/v3/files")
             .headers(self.header())
             .header("accept", "application/json")
@@ -226,6 +234,21 @@ impl VirusTotalClient {
             .await?
             .bytes()
             .await?;
+
+        Ok(bytes)
+    }
+
+    /// Submit a file to VirusTotal and receive parsed response.
+    pub async fn submit<D, N>(
+        &self,
+        data: D,
+        name: Option<N>,
+    ) -> Result<FileRescanRequestData, VirusTotalError>
+    where
+        D: Into<Cow<'static, [u8]>>,
+        N: Into<Cow<'static, str>>,
+    {
+        let body = self.submit_raw(data, name).await?;
         let json_response = String::from_utf8(body.to_ascii_lowercase())?;
         let report: FileRescanRequestResponse = serde_json::from_str(&json_response)?;
 
@@ -276,6 +299,21 @@ impl VirusTotalClient {
         Ok(body.to_vec())
     }
 
+    /// Search VirusTotal for files matching some search parameters, receive unparsed response.
+    /// Requires VT Premium!
+    pub async fn search_raw<Q>(&self, query: Q) -> Result<Bytes, VirusTotalError>
+    where
+        Q: Display,
+    {
+        let url = format!(
+            "https://www.virustotal.com/vtapi/v2/file/search?apikey={}&query={query}",
+            self.key.as_str()
+        );
+
+        let body = reqwest::get(url).await?.bytes().await?;
+        Ok(body)
+    }
+
     /// Search VirusTotal for files matching some search parameters. Requires VT Premium!
     /// For more information see https://virustotal.readme.io/v2.0/reference/file-search.
     /// Note: This uses the V2 API.
@@ -293,12 +331,7 @@ impl VirusTotalClient {
     where
         Q: Display,
     {
-        let url = format!(
-            "https://www.virustotal.com/vtapi/v2/file/search?apikey={}&query={query}",
-            self.key.as_str()
-        );
-
-        let body = reqwest::get(url).await?.bytes().await?;
+        let body = self.search_raw(&query).await?;
         let json_response = String::from_utf8(body.to_ascii_lowercase())?;
         let response: FileSearchResponse = serde_json::from_str(&json_response)?;
 
@@ -312,7 +345,8 @@ impl VirusTotalClient {
     }
 
     /// Search VirusTotal for files matching some search parameters. Requires VT Premium!
-    /// Use this to continue from a prior search for the next 300 results.
+    /// Use this to continue from a prior search for the next 300 results. Requires parsed response
+    /// via [Self::search()]
     pub async fn search_offset(
         &self,
         prior: &FileSearchResponse,
