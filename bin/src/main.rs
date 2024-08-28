@@ -11,8 +11,7 @@ use sha2::{Digest, Sha256};
 #[command(author, about, version)]
 struct Args {
     /// API key for VirusTotal
-    #[arg(long, env = "VT_API_KEY")]
-    pub key: String,
+    pub client: VirusTotalClient,
 
     /// Action to be performed with VirusTotal
     #[clap(subcommand)]
@@ -79,7 +78,7 @@ enum Action {
 }
 
 impl Action {
-    async fn execute(&self, client: &VirusTotalClient) -> Result<()> {
+    async fn execute(&self, client: VirusTotalClient) -> Result<()> {
         match self {
             Action::Submit(arg) => {
                 let contents = std::fs::read(&arg.file)?;
@@ -180,8 +179,7 @@ impl Action {
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<ExitCode> {
     let args = Args::parse();
-    let client: VirusTotalClient = args.key.into();
-    args.action.execute(&client).await?;
+    args.action.execute(args.client).await?;
 
     Ok(ExitCode::SUCCESS)
 }
