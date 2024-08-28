@@ -33,4 +33,4 @@ tokio = { version = "1.39", features = ["rt", "macros"], default-features = fals
 rstest = { version = "0.22", default-features = false }
 
 [package.metadata.docs.rs]
-all-features = true
+features = ["clap"]
