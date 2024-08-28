@@ -26,7 +26,7 @@ use bytes::Bytes;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::multipart::Form;
 use serde::{Deserialize, Serialize, Serializer};
-use zeroize::Zeroizing;
+use zeroize::{Zeroize, ZeroizeOnDrop};
 
 /// Capture the error from VirusTotal, plus parsing or networking errors along the way
 #[derive(Clone, Debug, Eq, Serialize, Deserialize)]
@@ -86,10 +86,12 @@ impl From<FromUtf8Error> for VirusTotalError {
 }
 
 /// VirusTotal client object
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Deserialize, Zeroize, ZeroizeOnDrop)]
+#[cfg_attr(feature = "clap", derive(clap::Args))]
 pub struct VirusTotalClient {
     /// The API key used to interact with VirusTotal
-    key: Zeroizing<String>,
+    #[cfg_attr(feature = "clap", arg(long, env = "VT_API_KEY"))]
+    key: String,
 }
 
 impl Debug for VirusTotalClient {
@@ -120,9 +122,7 @@ impl VirusTotalClient {
 
     /// New VirusTotal client given an API key which is assumed to be valid.
     pub fn new(key: String) -> Self {
-        Self {
-            key: Zeroizing::new(key),
-        }
+        Self { key }
     }
 
     fn header(&self) -> HeaderMap {
@@ -134,14 +134,20 @@ impl VirusTotalClient {
         headers
     }
 
+    fn client(&self) -> reqwest::Result<reqwest::Client> {
+        reqwest::ClientBuilder::new()
+            .gzip(true)
+            .default_headers(self.header())
+            .build()
+    }
+
     /// Get the unparsed file report from VirusTotal for an MD5, SHA-1, or SHA-256 hash, which is assumed to be valid.
     pub async fn get_report_raw(&self, file_hash: &str) -> Result<Bytes, VirusTotalError> {
-        let client = reqwest::Client::new();
+        let client = self.client()?;
         let bytes = client
             .get(format!(
                 "https://www.virustotal.com/api/v3/files/{file_hash}"
             ))
-            .headers(self.header())
             .send()
             .await?
             .bytes()
@@ -164,12 +170,11 @@ impl VirusTotalClient {
 
     /// Request VirusTotal rescan a file for an MD5, SHA-1, or SHA-256 hash, and receive the unparsed response
     pub async fn request_rescan_raw(&self, file_hash: &str) -> Result<Bytes, VirusTotalError> {
-        let client = reqwest::Client::new();
+        let client = self.client()?;
         let bytes = client
             .post(format!(
                 "https://www.virustotal.com/api/v3/files/{file_hash}/analyse"
             ))
-            .headers(self.header())
             .header("content-length", "0")
             .send()
             .await?
@@ -209,7 +214,7 @@ impl VirusTotalClient {
         D: Into<Cow<'static, [u8]>>,
         N: Into<Cow<'static, str>>,
     {
-        let client = reqwest::Client::new();
+        let client = self.client()?;
         let form = if let Some(file_name) = name {
             Form::new().part(
                 "file",
@@ -226,7 +231,6 @@ impl VirusTotalClient {
 
         let bytes = client
             .post("https://www.virustotal.com/api/v3/files")
-            .headers(self.header())
             .header("accept", "application/json")
             .header("content-type", "multipart/form-data")
             .multipart(form)
@@ -268,12 +272,11 @@ impl VirusTotalClient {
     /// let file_contents = client.download("abc91ba39ea3220d23458f8049ed900c16ce1023").await.unwrap();
     /// ```
     pub async fn download(&self, file_hash: &str) -> Result<Vec<u8>, VirusTotalError> {
-        let client = reqwest::Client::new();
+        let client = self.client()?;
         let response = client
             .get(format!(
                 "https://www.virustotal.com/api/v3/files/{file_hash}/download"
             ))
-            .headers(self.header())
             .send()
             .await?;
 
@@ -310,7 +313,7 @@ impl VirusTotalClient {
             self.key.as_str()
         );
 
-        let body = reqwest::get(url).await?.bytes().await?;
+        let body = self.client()?.get(url).send().await?.bytes().await?;
         Ok(body)
     }
 
@@ -358,7 +361,7 @@ impl VirusTotalClient {
             prior.offset
         );
 
-        let body = reqwest::get(url).await?.bytes().await?;
+        let body = self.client()?.get(url).send().await?.bytes().await?;
         let json_response = String::from_utf8(body.to_ascii_lowercase())?;
         let response: FileSearchResponse = serde_json::from_str(&json_response)?;
 
@@ -374,10 +377,9 @@ impl VirusTotalClient {
     /// Since this crate doesn't support every Virus Total feature, this function can receive a
     /// URL fragment and return the response.
     pub async fn other(&self, url: &str) -> reqwest::Result<Bytes> {
-        let client = reqwest::Client::new();
+        let client = self.client()?;
         client
             .get(format!("https://www.virustotal.com/api/v3/{url}"))
-            .headers(self.header())
             .send()
             .await?
             .bytes()
@@ -394,7 +396,7 @@ impl FromStr for VirusTotalClient {
             Err("Invalid API key length")
         } else {
             Ok(Self {
-                key: Zeroizing::new(key.to_string()),
+                key: key.to_string(),
             })
         }
     }

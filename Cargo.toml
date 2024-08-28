@@ -12,19 +12,21 @@ exclude = ["testdata"]
 
 [features]
 default = []
+clap = ["dep:clap"]
+native-tls = ["reqwest/native-tls"]
+native-tls-vendored = ["reqwest/native-tls-vendored"]
+rustls-tls = ["reqwest/rustls-tls"]
 unsafe-serialization = []
 
 [dependencies]
 bytes = { version = "1.7", default-features = false }
 chrono = { version = "0.4", features = ["clock", "serde"], default-features = false }
+clap = { version = "4.5", features = ["derive", "env", "std"], default-features = false, optional = true }
 lazy_static = { version = "1.5.0", default-features = false }
-reqwest = { version = "0.12", features = ["multipart", "rustls-tls"], default-features = false }
+reqwest = { version = "0.12", features = ["gzip", "multipart"], default-features = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0", features = ["alloc"], default-features = false }
-zeroize = { version = "1.8.1", features = ["serde"], default-features = false }
-
-[target.'cfg(target_env = "musl")'.dependencies]
-reqwest = { version = "0.12", features = ["multipart", "native-tls-vendored"] }
+zeroize = { version = "1.8", features = ["derive"], default-features = false }
 
 [dev-dependencies]
 tokio = { version = "1.39", features = ["rt", "macros"], default-features = false }
