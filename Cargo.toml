@@ -30,6 +30,7 @@ zeroize = { version = "1.8", features = ["derive"], default-features = false }
 
 [dev-dependencies]
 tokio = { version = "1.39", features = ["rt", "macros"], default-features = false }
+tokio-test = "0.4"
 rstest = { version = "0.22", default-features = false }
 
 [package.metadata.docs.rs]
