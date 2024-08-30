@@ -5,7 +5,7 @@ pub mod flags;
 use serde::{Deserialize, Serialize};
 
 /// Response from VirusTotal for a file search
-/// https://virustotal.readme.io/v2.0/reference/file-search
+/// [https://virustotal.readme.io/v2.0/reference/file-search]
 #[derive(Debug, Deserialize, Serialize)]
 pub struct FileSearchResponse {
     /// Response status code

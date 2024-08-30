@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// Fields and information unique to PE32 files
-/// https://virustotal.readme.io/reference/pe_info
+/// [https://virustotal.readme.io/reference/pe_info]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PEInfo {
     /// Rich Header, which may reveal compiler information
@@ -26,7 +26,7 @@ pub struct PEInfo {
     pub machine_type: u32,
 
     /// Import hash
-    /// https://www.mandiant.com/resources/blog/tracking-malware-import-hashing
+    /// [https://www.mandiant.com/resources/blog/tracking-malware-import-hashing]
     pub imphash: String,
 
     /// Section information
@@ -82,7 +82,7 @@ pub struct PEImports {
 }
 
 /// PE data related for .Net (CLR) binaries
-/// https://virustotal.readme.io/reference/dot_net_assembly
+/// [https://virustotal.readme.io/reference/dot_net_assembly]
 pub mod dotnet {
     use super::*;
 

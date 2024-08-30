@@ -45,7 +45,7 @@ pub struct FileReportData {
 }
 
 /// All scan results
-/// https://virustotal.readme.io/reference/files
+/// [https://virustotal.readme.io/reference/files]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ScanResultAttributes {
     /// When the file was created, often spoofed by malware
@@ -63,7 +63,7 @@ pub struct ScanResultAttributes {
     /// A description of the file type
     pub type_description: String,
 
-    /// Trend Micro's Locality Sensitive Hash: https://tlsh.org/
+    /// Trend Micro's Locality Sensitive Hash: [https://tlsh.org/]
     pub tlsh: Option<String>,
 
     /// VirusTotal's custom algorithm for clustering similar files
@@ -141,7 +141,7 @@ pub struct ScanResultAttributes {
     pub md5: String,
 
     /// SSDeep fuzzy hash of the file
-    /// See https://ssdeep-project.github.io/ssdeep/index.html
+    /// See [https://ssdeep-project.github.io/ssdeep/index.html]
     pub ssdeep: String,
 
     /// SHA-1 of the file
@@ -154,19 +154,19 @@ pub struct ScanResultAttributes {
     pub last_analysis_stats: LastAnalysisStats,
 
     /// Dictionary containing the number of matched Sigma rules group by its severity
-    /// https://blog.virustotal.com/2021/05/context-is-king-part-i-crowdsourced.html
-    /// https://virustotal.readme.io/docs/crowdsourced-sigma-rules
+    /// [https://blog.virustotal.com/2021/05/context-is-king-part-i-crowdsourced.html]
+    /// [https://virustotal.readme.io/docs/crowdsourced-sigma-rules]
     #[serde(default)]
     pub sigma_analysis_summary: HashMap<String, serde_json::Value>,
 
     /// Sigma results, if available
-    /// https://blog.virustotal.com/2021/05/context-is-king-part-i-crowdsourced.html
-    /// https://virustotal.readme.io/docs/crowdsourced-sigma-rules
+    /// [https://blog.virustotal.com/2021/05/context-is-king-part-i-crowdsourced.html]
+    /// [https://virustotal.readme.io/docs/crowdsourced-sigma-rules]
     #[serde(default)]
     pub sigma_analysis_stats: Option<SigmaAnalysisStats>,
 
     /// Results from VT's Sigma rules
-    /// See https://github.com/SigmaHQ/sigma/wiki/Rule-Creation-Guide
+    /// See [https://github.com/SigmaHQ/sigma/wiki/Rule-Creation-Guide]
     #[serde(default)]
     pub sigma_analysis_results: Vec<SigmaAnalysisResults>,
 
@@ -178,7 +178,7 @@ pub struct ScanResultAttributes {
     pub meaningful_name: String,
 
     /// The file's reputation from all votes,
-    /// see https://support.virustotal.com/hc/en-us/articles/115002146769-Vote-comment
+    /// see [https://support.virustotal.com/hc/en-us/articles/115002146769-Vote-comment]
     pub reputation: u32,
 
     /// Mach-O details, if a Mach-O file (macOS, iOS, etc)
@@ -225,7 +225,7 @@ pub struct Votes {
 }
 
 /// Popular threat classification contains threat information pulled from antivirus results
-/// https://virustotal.readme.io/reference/popular_threat_classification
+/// [https://virustotal.readme.io/reference/popular_threat_classification]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PopularThreatClassification {
     /// Popular threat category and name
@@ -273,8 +273,8 @@ pub struct AnalysisResult {
 }
 
 /// File type based on TrID
-/// https://virustotal.readme.io/reference/files-object-trid
-/// https://mark0.net/soft-trid-e.html
+/// [https://virustotal.readme.io/reference/files-object-trid]
+/// [https://mark0.net/soft-trid-e.html]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct TrID {
     /// Detected file type
@@ -284,7 +284,7 @@ pub struct TrID {
     pub probability: f32,
 }
 
-/// Output from Detect It Easy https://github.com/horsicq/Detect-It-Easy
+/// Output from Detect It Easy [https://github.com/horsicq/Detect-It-Easy]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DetectItEasy {
     /// File type
@@ -296,8 +296,8 @@ pub struct DetectItEasy {
 }
 
 /// File type from Detect It Easy
-/// https://virustotal.readme.io/reference/detectiteasy
-/// https://github.com/horsicq/Detect-It-Easy
+/// [https://virustotal.readme.io/reference/detectiteasy]
+/// [https://github.com/horsicq/Detect-It-Easy]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DetectItEasyValues {
     /// Artifacts detected in the file
@@ -369,8 +369,7 @@ impl LastAnalysisStats {
     }
 }
 
-/// Sandbox verdicts
-/// https://virustotal.readme.io/reference/sandbox_verdicts
+/// Sandbox verdicts, see [https://virustotal.readme.io/reference/sandbox_verdicts]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SandboxVerdict {
     /// Sandbox verdict
@@ -387,8 +386,7 @@ pub struct SandboxVerdict {
     pub malware_classification: Vec<String>,
 }
 
-/// Sandbox verdicts
-/// https://virustotal.readme.io/reference/sandbox_verdicts
+/// Sandbox verdicts, see [https://virustotal.readme.io/reference/sandbox_verdicts]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum SandboxVerdictCategory {
     /// Sample was suspicious
@@ -409,8 +407,8 @@ pub enum SandboxVerdictCategory {
 }
 
 /// Sigma analysis stats
-/// https://virustotal.readme.io/reference/sigma_analysis_stats
-/// https://virustotal.readme.io/docs/crowdsourced-sigma-rules
+/// [https://virustotal.readme.io/reference/sigma_analysis_stats]
+/// [https://virustotal.readme.io/docs/crowdsourced-sigma-rules]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SigmaAnalysisStats {
     /// Number of matched low severity rules.
@@ -427,8 +425,8 @@ pub struct SigmaAnalysisStats {
 }
 
 /// Sigma analysis results
-/// https://virustotal.readme.io/reference/sigma_analysis_results
-/// https://virustotal.readme.io/docs/crowdsourced-sigma-rules
+/// [https://virustotal.readme.io/reference/sigma_analysis_results]
+/// [https://virustotal.readme.io/docs/crowdsourced-sigma-rules]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SigmaAnalysisResults {
     /// Sigma rule title

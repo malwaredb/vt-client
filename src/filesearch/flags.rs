@@ -4,7 +4,7 @@ use std::ops::{Add, BitOr, Shl, Shr};
 use chrono::{DateTime, Days, Utc};
 
 /// File types available for searching
-/// See https://docs.virustotal.com/docs/file-search-modifiers for the complete list of flags.
+/// See [https://docs.virustotal.com/docs/file-search-modifiers] for the complete list of flags.
 #[derive(Copy, Clone, Debug, Hash)]
 pub enum FileType {
     /// Non-Linux Unix file, Common Object File Format
@@ -40,15 +40,15 @@ pub enum FileType {
     /// ELFs, but for Linux
     Linux,
 
-    /// New Executable `https://en.wikipedia.org/wiki/New_Executable`
+    /// New Executable [https://en.wikipedia.org/wiki/New_Executable]
     /// This is an old format for Windows 1.0 - Windows 95/98, OS/2
     Ne,
 
-    /// New Executable `https://en.wikipedia.org/wiki/New_Executable`, applications only
+    /// New Executable [https://en.wikipedia.org/wiki/New_Executable], applications only
     /// This is an old format for Windows 1.0 - Windows 95/98, OS/2
     NeExe,
 
-    /// New Executable `https://en.wikipedia.org/wiki/New_Executable`, shared library only
+    /// New Executable [https://en.wikipedia.org/wiki/New_Executable], shared library only
     /// This is an old format for Windows 1.0 - Windows 95/98, OS/2
     NeDll,
 

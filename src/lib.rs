@@ -4,7 +4,7 @@
 #![forbid(unsafe_code)]
 
 /// Pre-defined error types for Virus Total allowing for error comparison.
-/// https://virustotal.readme.io/reference/errors
+/// [https://virustotal.readme.io/reference/errors]
 pub mod errors;
 /// Logic for parsing the file report data from VirusTotal
 pub mod filereport;
