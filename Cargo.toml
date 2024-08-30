@@ -33,5 +33,8 @@ tokio = { version = "1.39", features = ["rt", "macros"], default-features = fals
 tokio-test = "0.4"
 rstest = { version = "0.22", default-features = false }
 
+[package.metadata.cargo-udeps.ignore]
+development = ["tokio-test"]
+
 [package.metadata.docs.rs]
 features = ["clap"]
