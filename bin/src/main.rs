@@ -1,3 +1,8 @@
+#![doc = include_str!("../README.md")]
+#![deny(missing_docs)]
+#![deny(clippy::all)]
+#![forbid(unsafe_code)]
+
 use malwaredb_virustotal::VirusTotalClient;
 
 use std::path::PathBuf;
