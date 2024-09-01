@@ -11,4 +11,12 @@ This is logic for interacting with [VirusTotal](https://www.virustotal.com)'s [V
 
 VirusTotal supports these actions given a MD5, SHA-1, or SHA-256 hash.
 
-Additionally, this provides provides a client application (in `bin/`) for the supported operations above: submitting a file, retrieving a report, requesting re-analysis, and downloading a sample (requires Premium).
+Additionally, this provides a client application (in `bin/`, or [malwaredb-virustotal-bin](https://crates.io/crates/malwaredb-virustotal-bin)) for the supported operations on the command line.
+
+### MUSL Targets
+It's recommended to use the `native-tls-vendored` feature to avoid OpenSSL build errors when compiling for Linux [MUSL](https://musl.libc.org/) targets. See the example `Cargo.toml` entry below:
+
+```toml
+[target.'cfg(target_env = "musl")'.dependencies]
+malwaredb-virustotal = { version = "0.1", features = ["native-tls-vendored"] }
+```
