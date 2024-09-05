@@ -25,7 +25,7 @@ jobs:
       - name: cargo fmt
         run: cargo fmt -- --check
       - name: cargo clippy
-        run: cargo clippy --all-features --tests -- -D warnings
+        run: cargo clippy --workspace --all-features --tests -- -D warnings
 
   udeps:
     name: Unused dependencies
