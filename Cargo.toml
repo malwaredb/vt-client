@@ -19,22 +19,42 @@ rustls-tls = ["reqwest/rustls-tls"]
 unsafe-serialization = []
 
 [dependencies]
-bytes = { version = "1.7", default-features = false }
-chrono = { version = "0.4", features = ["clock", "serde"], default-features = false }
-clap = { version = "4.5", features = ["derive", "env", "std"], default-features = false, optional = true }
-lazy_static = { version = "1.5.0", default-features = false }
-reqwest = { version = "0.12", features = ["gzip", "multipart"], default-features = true }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = { version = "1.0", features = ["alloc"], default-features = false }
-zeroize = { version = "1.8", features = ["derive"], default-features = false }
+bytes = { workspace = true, default-features = false }
+chrono = { workspace = true, features = ["clock", "serde"], default-features = false }
+clap = { workspace = true, features = ["derive", "env", "std"], default-features = false, optional = true }
+lazy_static = { workspace = true, default-features = false }
+reqwest = { workspace = true, features = ["gzip", "multipart"], default-features = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true, features = ["alloc"], default-features = false }
+zeroize = { workspace = true, features = ["derive"], default-features = false }
 
 [dev-dependencies]
-tokio = { version = "1.40", features = ["rt", "macros"], default-features = false }
-tokio-test = "0.4"
-rstest = { version = "0.22", default-features = false }
+tokio = { workspace = true, features = ["rt", "macros"], default-features = false }
+tokio-test = { workspace = true }
+rstest = { workspace = true, default-features = false }
 
 [package.metadata.cargo-udeps.ignore]
 development = ["tokio-test"]
 
 [package.metadata.docs.rs]
 features = ["clap"]
+
+[workspace]
+resolver = "2"
+members = ["bin"]
+
+[workspace.dependencies]
+anyhow = { version = "1.0", default-features = false }
+bytes = { version = "1.7", default-features = false }
+chrono = { version = "0.4", default-features = false }
+clap = { version = "4.5", default-features = false }
+hex = { version = "0.4.3", default-features = false }
+lazy_static = { version = "1.5.0", default-features = false }
+reqwest = { version = "0.12", default-features = true }
+rstest = { version = "0.22", default-features = false }
+serde = { version = "1.0", default-features = false }
+serde_json = { version = "1.0", default-features = false }
+sha2 = { version = "0.10.8", default-features = false }
+tokio = { version = "1.40", default-features = false }
+tokio-test = { version = "0.4", default-features = false }
+zeroize = { version = "1.8", default-features = false }
