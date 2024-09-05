@@ -1,13 +1,12 @@
 [package]
 name = "malwaredb-virustotal-bin"
-version = "0.1.2"
-edition = "2021"
-license = "Apache-2.0"
-authors = ["Richard Zak <richard.j.zak@gmail.com>"]
 description = "VirusTotal command line client"
-homepage = "https://malwaredb.net/"
-repository = "https://github.com/malwaredb/vt-client"
 keywords = ["cybersecurity", "malware", "malware-analysis", "virustotal"]
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+version.workspace = true
 
 [dependencies]
 anyhow = { workspace = true, features = ["std"] }
@@ -16,8 +15,8 @@ hex = { workspace = true, features = ["alloc"], default-features = false }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true, features = ["alloc"], default-features = false }
 sha2 = { workspace = true, default-features = false }
-malwaredb-virustotal = { path = "..", features = ["clap"], default-features = false }
+malwaredb-virustotal = { workspace = true, features = ["clap"], default-features = false }
 tokio = { workspace = true, features = ["rt", "macros"], default-features = false }
 
 [target.'cfg(target_env = "musl")'.dependencies]
-malwaredb-virustotal = { path = "..", features = ["clap", "native-tls-vendored"], default-features = false }
+malwaredb-virustotal = { workspace = true, features = ["clap", "native-tls-vendored"], default-features = false }
