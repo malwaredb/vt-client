@@ -347,6 +347,7 @@ impl VirusTotalClient {
             offset: response.offset,
             hashes: response.hashes,
             query: query.to_string(),
+            verbose_msg: response.verbose_msg,
         };
         Ok(response)
     }
@@ -358,11 +359,18 @@ impl VirusTotalClient {
         &self,
         prior: &FileSearchResponse,
     ) -> Result<FileSearchResponse, VirusTotalError> {
+        if prior.offset.is_none() {
+            return Err(VirusTotalError {
+                message: "Cannot continue a search without an offset code".to_string(),
+                code: "NonPaginatedResults".to_string(),
+            });
+        }
+
         let url = format!(
             "https://www.virustotal.com/vtapi/v2/file/search?apikey={}&query={}&offset={}",
             self.key.as_str(),
             prior.query,
-            prior.offset
+            prior.offset.as_ref().unwrap()
         );
 
         let body = self.client()?.get(url).send().await?.bytes().await?;
@@ -374,6 +382,7 @@ impl VirusTotalClient {
             offset: response.offset,
             hashes: response.hashes,
             query: prior.query.clone(),
+            verbose_msg: response.verbose_msg,
         };
         Ok(response)
     }

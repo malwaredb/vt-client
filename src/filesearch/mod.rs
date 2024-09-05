@@ -11,8 +11,8 @@ pub struct FileSearchResponse {
     /// Response status code
     pub response_code: u32,
 
-    /// Offset, used for paginating search results
-    pub offset: String,
+    /// Offset, used for paginating search results, if more results are available
+    pub offset: Option<String>,
 
     /// Hashes of files which match the search criteria. Maximum of 300 results.
     pub hashes: Vec<String>,
@@ -20,4 +20,7 @@ pub struct FileSearchResponse {
     /// Original query
     #[serde(default)]
     pub query: String,
+
+    /// Message from VirusTotal about the search results
+    pub verbose_msg: Option<String>,
 }
