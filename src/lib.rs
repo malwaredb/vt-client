@@ -190,8 +190,8 @@ impl VirusTotalClient {
     /// // Use of `.unwrap()` for demonstration, don't actually do this.
     /// let client = VirusTotalClient::new(std::env::var("VT_API_KEY").unwrap());
     /// # tokio_test::block_on(async {
-    ///     let response = client.request_rescan("abc91ba39ea3220d23458f8049ed900c16ce1023").await.unwrap();
-    ///     assert_eq!(response.rescan_type, "analysis");
+    /// let response = client.request_rescan("abc91ba39ea3220d23458f8049ed900c16ce1023").await.unwrap();
+    /// assert_eq!(response.rescan_type, "analysis");
     /// # })
     /// ```
     pub async fn request_rescan(
@@ -270,7 +270,7 @@ impl VirusTotalClient {
     /// // Use of `.unwrap()` for demonstration, don't actually do this.
     /// let client = VirusTotalClient::new(std::env::var("VT_API_KEY").unwrap());
     /// # tokio_test::block_on(async {
-    ///     let file_contents = client.download("abc91ba39ea3220d23458f8049ed900c16ce1023").await.unwrap();
+    /// let file_contents = client.download("abc91ba39ea3220d23458f8049ed900c16ce1023").await.unwrap();
     /// # })
     /// ```
     pub async fn download(&self, file_hash: &str) -> Result<Vec<u8>, VirusTotalError> {
@@ -331,7 +331,7 @@ impl VirusTotalClient {
     /// let client = VirusTotalClient::new(std::env::var("VT_API_KEY").unwrap());
     /// // Find PDFs, which are benign, have a fill-able form, and Javascript, first seen yesterday
     /// # tokio_test::block_on(async {
-    ///     let result = client.search(flags::FileType::Pdf + flags::BENIGN + flags::Tag::PdfForm + flags::Tag::PdfJs + flags::FirstSubmission::days(1)).await.unwrap();
+    /// let result = client.search(flags::FileType::Pdf + flags::BENIGN + flags::Tag::PdfForm + flags::Tag::PdfJs + flags::FirstSubmission::days(1)).await.unwrap();
     /// # })
     /// ```
     pub async fn search<Q>(&self, query: Q) -> Result<FileSearchResponse, VirusTotalError>
