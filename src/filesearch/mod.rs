@@ -14,7 +14,8 @@ pub struct FileSearchResponse {
     /// Offset, used for paginating search results, if more results are available
     pub offset: Option<String>,
 
-    /// Hashes of files which match the search criteria. Maximum of 300 results.
+    /// Hashes of files which match the search criteria, if any. Maximum of 300 results.
+    #[serde(default)]
     pub hashes: Vec<String>,
 
     /// Original query

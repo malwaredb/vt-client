@@ -7,6 +7,15 @@ use chrono::{DateTime, Days, Utc};
 /// See [https://docs.virustotal.com/docs/file-search-modifiers] for the complete list of flags.
 #[derive(Copy, Clone, Debug, Hash)]
 pub enum FileType {
+    /// Any executable
+    AnyExecutable,
+
+    /// Android .apk application package
+    Apk,
+
+    /// Android application
+    Android,
+
     /// Non-Linux Unix file, Common Object File Format
     Coff,
 
@@ -40,6 +49,12 @@ pub enum FileType {
     /// ELFs, but for Linux
     Linux,
 
+    /// Debian package for Linux, typically Debian, Ubuntu, Mint, others
+    Deb,
+
+    /// RPM paclage for Linux, typically Redhat, CentOS, others
+    Rpm,
+
     /// New Executable [https://en.wikipedia.org/wiki/New_Executable]
     /// This is an old format for Windows 1.0 - Windows 95/98, OS/2
     Ne,
@@ -51,6 +66,9 @@ pub enum FileType {
     /// New Executable [https://en.wikipedia.org/wiki/New_Executable], shared library only
     /// This is an old format for Windows 1.0 - Windows 95/98, OS/2
     NeDll,
+
+    /// Program which installs some other program
+    Installer,
 
     /// Mach-O, for macOS, iOS, etc
     MachO,
@@ -76,6 +94,12 @@ pub enum FileType {
     /// PE32 files, just .exe
     PeExe,
 
+    /// 16-bit Windows (.exe or .dll, old Windows)
+    Win16,
+
+    /// 32-bit Windows (.exe or .dll, current Windows)
+    Win32,
+
     /// Any PE32 file which could run on Windows
     Windows,
 
@@ -86,6 +110,9 @@ pub enum FileType {
 impl Display for FileType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
+            FileType::AnyExecutable => write!(f, "type:executable"),
+            FileType::Apk => write!(f, "type:apk"),
+            FileType::Android => write!(f, "type:android"),
             FileType::Coff => write!(f, "type:coff"),
             FileType::Com => write!(f, "type:com"),
             FileType::Word => write!(f, "type:word"),
@@ -93,11 +120,14 @@ impl Display for FileType {
             FileType::Docx => write!(f, "type:docx"),
             FileType::Dos => write!(f, "type:dos"),
             FileType::Elf => write!(f, "type:elf"),
+            FileType::Deb => write!(f, "type:deb"),
+            FileType::Rpm => write!(f, "type:rpm"),
             FileType::Excel => write!(f, "type:excel"),
             FileType::Xls => write!(f, "type:xls"),
             FileType::Xlsx => write!(f, "type:xlsx"),
             FileType::Linux => write!(f, "type:linux"),
             FileType::Ne => write!(f, "type:ne"),
+            FileType::Installer => write!(f, "type:installer"),
             FileType::NeExe => write!(f, "type:neexe"),
             FileType::NeDll => write!(f, "type:nedll"),
             FileType::MachO => write!(f, "type:macho"),
@@ -108,6 +138,8 @@ impl Display for FileType {
             FileType::PE32 => write!(f, "type:peexe OR type:pedll"),
             FileType::PeDll => write!(f, "type:pedll"),
             FileType::PeExe => write!(f, "type:peexe"),
+            FileType::Win16 => write!(f, "type:win16"),
+            FileType::Win32 => write!(f, "type:win32"),
             FileType::Windows => write!(f, "type:windows"),
             FileType::WindowsMSI => write!(f, "type:msi"),
         }
