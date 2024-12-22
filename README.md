@@ -18,5 +18,5 @@ It's recommended to use the `native-tls-vendored` feature to avoid OpenSSL build
 
 ```toml
 [target.'cfg(target_env = "musl")'.dependencies]
-malwaredb-virustotal = { version = "0.1", features = ["native-tls-vendored"] }
+malwaredb-virustotal = { version = "0.2", features = ["native-tls-vendored"] }
 ```
