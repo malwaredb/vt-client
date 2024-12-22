@@ -28,7 +28,10 @@ use bytes::Bytes;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::multipart::{Form, Part};
 use serde::{Deserialize, Serialize, Serializer};
+use tokio::fs::File;
 use zeroize::{Zeroize, ZeroizeOnDrop};
+
+const THIRTY_TWO_MEGABYTES: u64 = 32 * 1024 * 1024;
 
 /// Capture the error from VirusTotal, plus parsing or networking errors along the way
 #[derive(Clone, Debug, Eq, Serialize, Deserialize)]
@@ -230,10 +233,19 @@ impl VirusTotalClient {
     {
         let client = self.client()?;
 
+        let file = File::open(&path).await?;
+        let size = file.metadata().await?.len();
+
+        let url = if size >= THIRTY_TWO_MEGABYTES {
+            self.get_upload_url().await?
+        } else {
+            "https://www.virustotal.com/api/v3/files".to_string()
+        };
+
         let form = Form::new().file("file", path).await?;
 
         let bytes = client
-            .post("https://www.virustotal.com/api/v3/files")
+            .post(url)
             .header("accept", "application/json")
             .multipart(form)
             .send()
@@ -264,12 +276,24 @@ impl VirusTotalClient {
 
     /// Submit bytes to VirusTotal and receive the unparsed response.
     #[inline]
-    pub async fn submit_bytes_raw<D, N>(&self, data: D, name: N) -> Result<Bytes, VirusTotalError>
+    pub async fn submit_bytes_raw<N>(
+        &self,
+        data: Vec<u8>,
+        name: N,
+    ) -> Result<Bytes, VirusTotalError>
     where
-        D: Into<Cow<'static, [u8]>>,
         N: Into<Cow<'static, str>>,
     {
         let client = self.client()?;
+
+        // It's unfortunate that we had to take ownership of the bytes. This is because `Path::new()`
+        // is private in `reqwest`. There is no other way to get the size.
+        let url = if data.len() as u64 >= THIRTY_TWO_MEGABYTES {
+            self.get_upload_url().await?
+        } else {
+            "https://www.virustotal.com/api/v3/files".to_string()
+        };
+
         let form = Form::new().part(
             "file",
             Part::bytes(data)
@@ -278,7 +302,7 @@ impl VirusTotalClient {
         );
 
         let bytes = client
-            .post("https://www.virustotal.com/api/v3/files")
+            .post(url)
             .header("accept", "application/json")
             .multipart(form)
             .send()
@@ -290,13 +314,12 @@ impl VirusTotalClient {
     }
 
     /// Submit bytes to VirusTotal and receive parsed response.
-    pub async fn submit_bytes<D, N>(
+    pub async fn submit_bytes<N>(
         &self,
-        data: D,
+        data: Vec<u8>,
         name: N,
     ) -> Result<FileRescanRequestData, VirusTotalError>
     where
-        D: Into<Cow<'static, [u8]>>,
         N: Into<Cow<'static, str>>,
     {
         let body = self.submit_bytes_raw(data, name).await?;
@@ -307,6 +330,19 @@ impl VirusTotalClient {
             FileRescanRequestResponse::Data(data) => Ok(data),
             FileRescanRequestResponse::Error(error) => Err(error),
         }
+    }
+
+    /// Get a special one-time URL endpoint for submitting files larger than 32 MB
+    #[inline]
+    pub async fn get_upload_url(&self) -> Result<String, VirusTotalError> {
+        let response = self.other("files/upload_url").await?;
+        let response = String::from_utf8(response.to_vec())?;
+        let response = serde_json::from_str::<serde_json::Value>(&response)?;
+        let url = response["data"].as_str().ok_or(VirusTotalError {
+            message: "No URL returned".to_string(),
+            code: "NoURLReturned".to_string(),
+        })?;
+        Ok(url.to_string())
     }
 
     /// Download a file from VirusTotal, requires VirusTotal Premium!
@@ -495,7 +531,7 @@ mod test {
 
             const ELF: &[u8] = include_bytes!("../testdata/elf_haiku_x86");
             client
-                .submit_bytes(ELF, "elf_haiku_x86".to_string())
+                .submit_bytes(Vec::from(ELF), "elf_haiku_x86".to_string())
                 .await
                 .unwrap();
 

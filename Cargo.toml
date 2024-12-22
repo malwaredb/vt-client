@@ -26,6 +26,7 @@ lazy_static = { workspace = true, default-features = false }
 reqwest = { workspace = true, features = ["gzip", "multipart", "stream"], default-features = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true, features = ["alloc"], default-features = false }
+tokio = { workspace = true, features = ["fs"] }
 zeroize = { workspace = true, features = ["derive"], default-features = false }
 
 [dev-dependencies]
