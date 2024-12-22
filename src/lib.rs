@@ -19,12 +19,14 @@ use crate::filesearch::FileSearchResponse;
 
 use std::borrow::Cow;
 use std::fmt::{Debug, Display, Formatter};
+use std::io::Error;
+use std::path::Path;
 use std::str::FromStr;
 use std::string::FromUtf8Error;
 
 use bytes::Bytes;
 use reqwest::header::{HeaderMap, HeaderValue};
-use reqwest::multipart::Form;
+use reqwest::multipart::{Form, Part};
 use serde::{Deserialize, Serialize, Serializer};
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
@@ -81,6 +83,15 @@ impl From<FromUtf8Error> for VirusTotalError {
         Self {
             message: "UTF-8 decoding error".into(),
             code: err.to_string(),
+        }
+    }
+}
+
+impl From<std::io::Error> for VirusTotalError {
+    fn from(value: Error) -> Self {
+        Self {
+            message: "IO error".into(),
+            code: value.to_string(),
         }
     }
 }
@@ -208,24 +219,18 @@ impl VirusTotalClient {
         }
     }
 
-    /// Submit a file to VirusTotal and receive the unparsed response.
-    pub async fn submit_raw<D, N>(&self, data: D, name: N) -> Result<Bytes, VirusTotalError>
+    /// Submit a file by path to VirusTotal and receive the unparsed response.
+    pub async fn submit_file_path_raw<P>(&self, path: P) -> Result<Bytes, VirusTotalError>
     where
-        D: Into<Cow<'static, [u8]>>,
-        N: Into<Cow<'static, str>>,
+        P: AsRef<Path>,
     {
         let client = self.client()?;
-        let form = Form::new().part(
-            "file",
-            reqwest::multipart::Part::bytes(data)
-                .file_name(name)
-                .mime_str("application/octet-stream")?,
-        );
+
+        let form = Form::new().file("file", path).await?;
 
         let bytes = client
             .post("https://www.virustotal.com/api/v3/files")
             .header("accept", "application/json")
-            .header("content-type", "multipart/form-data")
             .multipart(form)
             .send()
             .await?
@@ -235,8 +240,52 @@ impl VirusTotalClient {
         Ok(bytes)
     }
 
-    /// Submit a file to VirusTotal and receive parsed response.
-    pub async fn submit<D, N>(
+    /// Submit a file by path to VirusTotal and receive parsed response.
+    pub async fn submit_file_path<P>(
+        &self,
+        path: P,
+    ) -> Result<FileRescanRequestData, VirusTotalError>
+    where
+        P: AsRef<Path>,
+    {
+        let body = self.submit_file_path_raw(path).await?;
+        let json_response = String::from_utf8(body.to_ascii_lowercase())?;
+        let report: FileRescanRequestResponse = serde_json::from_str(&json_response)?;
+
+        match report {
+            FileRescanRequestResponse::Data(data) => Ok(data),
+            FileRescanRequestResponse::Error(error) => Err(error),
+        }
+    }
+
+    /// Submit bytes to VirusTotal and receive the unparsed response.
+    pub async fn submit_bytes_raw<D, N>(&self, data: D, name: N) -> Result<Bytes, VirusTotalError>
+    where
+        D: Into<Cow<'static, [u8]>>,
+        N: Into<Cow<'static, str>>,
+    {
+        let client = self.client()?;
+        let form = Form::new().part(
+            "file",
+            Part::bytes(data)
+                .file_name(name)
+                .mime_str("application/octet-stream")?,
+        );
+
+        let bytes = client
+            .post("https://www.virustotal.com/api/v3/files")
+            .header("accept", "application/json")
+            .multipart(form)
+            .send()
+            .await?
+            .bytes()
+            .await?;
+
+        Ok(bytes)
+    }
+
+    /// Submit bytes to VirusTotal and receive parsed response.
+    pub async fn submit_bytes<D, N>(
         &self,
         data: D,
         name: N,
@@ -245,7 +294,7 @@ impl VirusTotalClient {
         D: Into<Cow<'static, [u8]>>,
         N: Into<Cow<'static, str>>,
     {
-        let body = self.submit_raw(data, name).await?;
+        let body = self.submit_bytes_raw(data, name).await?;
         let json_response = String::from_utf8(body.to_ascii_lowercase())?;
         let report: FileRescanRequestResponse = serde_json::from_str(&json_response)?;
 
@@ -440,7 +489,7 @@ mod test {
 
             const ELF: &[u8] = include_bytes!("../testdata/elf_haiku_x86");
             client
-                .submit(ELF, "elf_haiku_x86".to_string())
+                .submit_bytes(ELF, "elf_haiku_x86".to_string())
                 .await
                 .unwrap();
 

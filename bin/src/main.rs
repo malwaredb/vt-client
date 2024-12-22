@@ -86,15 +86,7 @@ impl Action {
     async fn execute(&self, client: VirusTotalClient) -> Result<()> {
         match self {
             Action::Submit(arg) => {
-                let contents = std::fs::read(&arg.file)?;
-                let name = arg
-                    .file
-                    .file_name()
-                    .expect("failed to decode file name")
-                    .to_str()
-                    .expect("failed to decode file name")
-                    .to_string();
-                let response = client.submit(contents, name).await?;
+                let response = client.submit_file_path(&arg.file).await?;
                 println!("Submitted, request id {}", response.id);
             }
             Action::GetReport(arg) => {
