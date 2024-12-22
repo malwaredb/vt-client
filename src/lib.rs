@@ -137,6 +137,7 @@ impl VirusTotalClient {
     }
 
     /// Generate a client which already knows to send the API key, and asks for gzip responses.
+    #[inline]
     fn client(&self) -> reqwest::Result<reqwest::Client> {
         let mut headers = HeaderMap::new();
         headers.insert(
@@ -151,6 +152,7 @@ impl VirusTotalClient {
     }
 
     /// Get the unparsed file report from VirusTotal for an MD5, SHA-1, or SHA-256 hash, which is assumed to be valid.
+    #[inline]
     pub async fn get_report_raw(&self, file_hash: &str) -> Result<Bytes, VirusTotalError> {
         let client = self.client()?;
         let bytes = client
@@ -178,6 +180,7 @@ impl VirusTotalClient {
     }
 
     /// Request VirusTotal rescan a file for an MD5, SHA-1, or SHA-256 hash, and receive the unparsed response
+    #[inline]
     pub async fn request_rescan_raw(&self, file_hash: &str) -> Result<Bytes, VirusTotalError> {
         let client = self.client()?;
         let bytes = client
@@ -220,6 +223,7 @@ impl VirusTotalClient {
     }
 
     /// Submit a file by path to VirusTotal and receive the unparsed response.
+    #[inline]
     pub async fn submit_file_path_raw<P>(&self, path: P) -> Result<Bytes, VirusTotalError>
     where
         P: AsRef<Path>,
@@ -259,6 +263,7 @@ impl VirusTotalClient {
     }
 
     /// Submit bytes to VirusTotal and receive the unparsed response.
+    #[inline]
     pub async fn submit_bytes_raw<D, N>(&self, data: D, name: N) -> Result<Bytes, VirusTotalError>
     where
         D: Into<Cow<'static, [u8]>>,
@@ -348,6 +353,7 @@ impl VirusTotalClient {
 
     /// Search VirusTotal for files matching some search parameters, receive unparsed response.
     /// Requires VT Premium!
+    #[inline]
     pub async fn search_raw<Q>(&self, query: Q) -> Result<Bytes, VirusTotalError>
     where
         Q: Display,
