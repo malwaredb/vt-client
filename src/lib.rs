@@ -209,25 +209,18 @@ impl VirusTotalClient {
     }
 
     /// Submit a file to VirusTotal and receive the unparsed response.
-    pub async fn submit_raw<D, N>(&self, data: D, name: Option<N>) -> Result<Bytes, VirusTotalError>
+    pub async fn submit_raw<D, N>(&self, data: D, name: N) -> Result<Bytes, VirusTotalError>
     where
         D: Into<Cow<'static, [u8]>>,
         N: Into<Cow<'static, str>>,
     {
         let client = self.client()?;
-        let form = if let Some(file_name) = name {
-            Form::new().part(
-                "file",
-                reqwest::multipart::Part::bytes(data)
-                    .file_name(file_name)
-                    .mime_str("application/octet-stream")?,
-            )
-        } else {
-            Form::new().part(
-                "file",
-                reqwest::multipart::Part::bytes(data).mime_str("application/octet-stream")?,
-            )
-        };
+        let form = Form::new().part(
+            "file",
+            reqwest::multipart::Part::bytes(data)
+                .file_name(name)
+                .mime_str("application/octet-stream")?,
+        );
 
         let bytes = client
             .post("https://www.virustotal.com/api/v3/files")
@@ -246,7 +239,7 @@ impl VirusTotalClient {
     pub async fn submit<D, N>(
         &self,
         data: D,
-        name: Option<N>,
+        name: N,
     ) -> Result<FileRescanRequestData, VirusTotalError>
     where
         D: Into<Cow<'static, [u8]>>,
@@ -447,7 +440,7 @@ mod test {
 
             const ELF: &[u8] = include_bytes!("../testdata/elf_haiku_x86");
             client
-                .submit(Vec::from(ELF), Some("elf_haiku_x86".to_string()))
+                .submit(ELF, "elf_haiku_x86".to_string())
                 .await
                 .unwrap();
 
