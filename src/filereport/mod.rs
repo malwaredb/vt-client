@@ -63,6 +63,9 @@ pub struct ScanResultAttributes {
     /// A description of the file type
     pub type_description: String,
 
+    /// Exiftool results, requires VirusTotal Premium
+    pub exiftool: Option<ExifTool>,
+
     /// Trend Micro's Locality Sensitive Hash: [https://tlsh.org/]
     pub tlsh: Option<String>,
 
@@ -270,6 +273,165 @@ pub struct AnalysisResult {
 
     /// The date of the antivirus engine
     pub engine_update: Option<String>,
+}
+
+/// ExifTool metadata, requires VirusTotal Premium. See [https://docs.virustotal.com/reference/exiftool]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "PascalCase")]
+pub struct ExifTool {
+    /// Windows PE: Application character set
+    pub character_set: Option<String>,
+
+    /// Windows PE: code side
+    pub code_size: Option<String>,
+
+    /// Windows PE: Company name
+    pub company_name: Option<String>,
+
+    /// PDF: Creation date
+    pub create_date: Option<String>,
+
+    /// PDF: Creator application
+    pub creator: Option<String>,
+
+    /// PDF: Creator tool
+    pub creator_tool: Option<String>,
+
+    /// PDF: Document ID
+    #[serde(rename = "DocumentID")]
+    pub document_id: Option<String>,
+
+    /// Windows PE: entry point address
+    pub entry_point: Option<String>,
+
+    /// Windows PE: description about the file
+    pub file_description: Option<String>,
+
+    /// Windows PE: File flags mask
+    pub file_flags_mask: Option<String>,
+
+    /// Windows PE: expected operating system
+    #[serde(rename = "FileOS")]
+    pub file_os: Option<String>,
+
+    /// Windows PE: size of the file
+    pub file_size: Option<String>,
+
+    /// Windows PE: File subtype
+    pub file_subtype: Option<String>,
+
+    /// PDF & Windows PE: File type
+    pub file_type: Option<String>,
+
+    /// PDF & Windows PE: file extension for the file type
+    pub file_type_extension: Option<String>,
+
+    /// Windows PE: file version
+    pub file_version: Option<String>,
+
+    /// Windows PE: file version number
+    pub file_version_number: Option<String>,
+
+    /// PDF (others?): File format
+    pub format: Option<String>,
+
+    /// PDF: Has forms (XML Forms Architecture)
+    #[serde(rename = "HasXFA")]
+    pub hasxfa: Option<String>,
+
+    /// Windows PE: image file characteristics
+    pub image_file_characteristics: Option<String>,
+
+    /// Windows PE: image version
+    pub image_version: Option<String>,
+
+    /// Windows PE: initialized data size
+    pub initialized_data_size: Option<String>,
+
+    /// PDF: Instance ID
+    #[serde(rename = "InstanceID")]
+    pub instance_id: Option<String>,
+
+    /// Windows PE: internal name
+    pub internal_name: Option<String>,
+
+    /// Windows PE: language code
+    pub language_code: Option<String>,
+
+    /// Windows PE: copyright information
+    pub legal_copyright: Option<String>,
+
+    /// PDF: If linearized
+    pub linearized: Option<String>,
+
+    /// Windows PE: linker version
+    pub linker_version: Option<String>,
+
+    /// PDF & Windows PE: MIME type
+    #[serde(rename = "MIMEType")]
+    pub mimetype: Option<String>,
+
+    /// Windows PE: Machine type
+    pub machine_type: Option<String>,
+
+    /// PDF: Metadata date
+    pub metadata_date: Option<String>,
+
+    /// PDF: Modification date
+    pub modify_date: Option<String>,
+
+    /// Windows PE: operating system version
+    #[serde(rename = "OSVersion")]
+    pub os_version: Option<String>,
+
+    /// Windows PE: Object file type
+    pub object_file_type: Option<String>,
+
+    /// Windows PE: original file name
+    pub original_file_name: Option<String>,
+
+    /// PDF: Page count
+    pub page_count: Option<String>,
+
+    /// PDF: PDF version
+    #[serde(rename = "PDFVersion")]
+    pub pdf_version: Option<String>,
+
+    /// Windows PE: PE type
+    #[serde(rename = "PEType")]
+    pub petype: Option<String>,
+
+    /// PDF: Producer
+    pub producer: Option<String>,
+
+    /// Windows PE: Product name
+    pub product_name: Option<String>,
+
+    /// Windows PE: product version
+    pub product_version: Option<String>,
+
+    /// Windows PE: product version number
+    pub product_version_number: Option<String>,
+
+    /// Windows PE: Windows subsystem type
+    pub subsystem: Option<String>,
+
+    /// Windows PE: Windows subsystem version
+    pub subsystem_version: Option<String>,
+
+    /// Windows PE: creation timestamp
+    pub time_stamp: Option<String>,
+
+    /// Windows PE: Uninitialized data size
+    pub uninitialized_data_size: Option<String>,
+
+    /// PDF: XMP (extensible metadata platform) toolkit
+    #[serde(rename = "XMPToolkit")]
+    pub xmp_toolkit: Option<String>,
+
+    /// Anything else not capture by this struct
+    #[serde(flatten)]
+    pub extra: HashMap<String, serde_json::Value>,
 }
 
 /// File type based on TrID
@@ -488,5 +650,69 @@ mod tests {
             FileReportRequestResponse::Data(_) => panic!("Should have been an error type!"),
             FileReportRequestResponse::Error(_) => {}
         }
+    }
+
+    #[test]
+    fn pe_exif() {
+        // Data comes from VirusTotal documentation
+        const PE_JSON: &str = r#"{
+            "CodeSize": "86528",
+            "EntryPoint": "0x5d45",
+            "FileFlagsMask": "0x003f",
+            "FileOS": "Windows NT 32-bit",
+            "FileSubtype": "0",
+            "FileType": "Win32 EXE",
+            "FileTypeExtension": "exe",
+            "FileVersionNumber": "1.0.0.1",
+            "ImageFileCharacteristics": "Executable, 32-bit",
+            "ImageVersion": "0.0",
+            "InitializedDataSize": "15447552",
+            "LinkerVersion": "10.0",
+            "MIMEType": "application/octet-stream",
+            "MachineType": "Intel 386 or later, and compatibles",
+            "OSVersion": "5.1",
+            "ObjectFileType": "Executable application",
+            "PEType": "PE32",
+            "ProductVersionNumber": "1.0.0.1",
+            "Subsystem": "Windows GUI",
+            "SubsystemVersion": "5.1",
+            "TimeStamp": "2018:06:10 05:04:21+02:00",
+            "UninitializedDataSize": "0"
+            }"#;
+
+        let exiftool: ExifTool = serde_json::from_str(PE_JSON).unwrap();
+        assert_eq!(exiftool.file_type.unwrap(), "Win32 EXE");
+        assert_eq!(exiftool.mimetype.unwrap(), "application/octet-stream");
+        assert_eq!(exiftool.os_version.unwrap(), "5.1");
+        assert!(exiftool.extra.is_empty());
+    }
+
+    #[test]
+    fn pdf_exif() {
+        // Data comes from VirusTotal documentation
+        const PDF_JSON: &str = r#"{
+            "CreateDate": "2020:02:27 18:03:45+03:00",
+            "DocumentID": "uuid:5ac8d66b-6716-466c-b665-965766c06571",
+            "FileType": "PDF",
+            "FileTypeExtension": "pdf",
+            "Format": "application/pdf",
+            "HasXFA": "No",
+            "InstanceID": "uuid:696b3606-6627-606f-b636-769b656676f0",
+            "Linearized": "No",
+            "MIMEType": "application/pdf",
+            "MetadataDate": "2020:02:27 18:03:45+03:00",
+            "ModifyDate": "2020:02:27 18:03:45+03:00",
+            "PDFVersion": "1.6",
+            "PageCount": "2",
+            "XMPToolkit": "Adobe XMP Core 5.4-c005 78.147326, 2012/08/23-13:03:03"
+            }"#;
+
+        let exiftool: ExifTool = serde_json::from_str(PDF_JSON).unwrap();
+        assert_eq!(exiftool.pdf_version.unwrap(), "1.6");
+        assert_eq!(
+            exiftool.xmp_toolkit.unwrap(),
+            "Adobe XMP Core 5.4-c005 78.147326, 2012/08/23-13:03:03"
+        );
+        assert!(exiftool.extra.is_empty());
     }
 }
