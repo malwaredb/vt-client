@@ -2,10 +2,11 @@ use std::fmt::{Debug, Display, Formatter};
 use std::ops::{Add, BitOr, Shl, Shr};
 
 use chrono::{DateTime, Days, Utc};
+use serde::{Deserialize, Serialize};
 
 /// File types available for searching
 /// See <https://docs.virustotal.com/docs/file-search-modifiers> for the complete list of flags.
-#[derive(Copy, Clone, Debug, Hash)]
+#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
 pub enum FileType {
     /// Any executable
     AnyExecutable,
@@ -154,8 +155,8 @@ impl BitOr for FileType {
     }
 }
 
-/// [Vec<FileType>] with [Display] already implemented.
-#[derive(Clone, Debug, Hash)]
+/// [Vec<FileType>] with [Display] already implemented showing "OR" between types.
+#[derive(Clone, Debug, Hash, Serialize, Deserialize)]
 pub struct FileTypes(pub Vec<FileType>);
 
 impl Display for FileTypes {
@@ -171,8 +172,8 @@ impl Display for FileTypes {
 }
 
 /// File attributes, many are file-type specific. Be sure to not use a [Tag] which is not
-/// appropriate for the [FileType] being sought.
-#[derive(Copy, Clone, Debug, Hash)]
+/// appropriate for the [FileType] being sought!
+#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
 pub enum Tag {
     /// PE32 file which uses the .Net Framework (CLR)
     DotNetAssembly,
@@ -239,7 +240,7 @@ impl BitOr for Tag {
 }
 
 /// [Vec<Tag>] with [Display] already implemented.
-#[derive(Clone, Debug, Hash)]
+#[derive(Clone, Debug, Hash, Serialize, Deserialize)]
 pub struct Tags(pub Vec<Tag>);
 
 impl Display for Tags {
@@ -255,7 +256,7 @@ impl Display for Tags {
 }
 
 /// Antivirus hit results, with optional upper bound.
-#[derive(Copy, Clone, Debug, Hash)]
+#[derive(Copy, Clone, Debug, Hash, Serialize, Deserialize)]
 pub struct Positives {
     /// Minimum number of hits
     pub min: u32,
@@ -323,7 +324,7 @@ impl Display for Positives {
 }
 
 /// Find files submitted on or after a specific date, or within a date range
-#[derive(Clone, Debug, Hash, Eq, PartialEq)]
+#[derive(Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
 pub struct FirstSubmission {
     /// First seen date & time
     pub first: DateTime<Utc>,
