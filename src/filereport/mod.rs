@@ -41,6 +41,7 @@ pub struct FileReportData {
     pub id: String,
 
     /// Link to the file report
+    #[serde(default)]
     pub links: HashMap<String, String>,
 }
 
@@ -54,28 +55,35 @@ pub struct ScanResultAttributes {
 
     /// List of tags related to the file's capabilities
     /// Requires VirusTotal Premium
+    #[serde(default)]
     pub capabilities_tags: Option<Vec<String>>,
 
     /// Extracted malware configuration
     /// Requires VirusTotal Premium
+    #[serde(default)]
     pub malware_config: Option<HashMap<String, String>>,
 
     /// A description of the file type
     pub type_description: String,
 
     /// Exiftool results, requires VirusTotal Premium
+    #[serde(default)]
     pub exiftool: Option<ExifTool>,
 
     /// Trend Micro's Locality Sensitive Hash: [https://tlsh.org/]
+    #[serde(default)]
     pub tlsh: Option<String>,
 
     /// VirusTotal's custom algorithm for clustering similar files
+    #[serde(default)]
     pub vhash: Option<String>,
 
     /// Trend Micro's ELF hash
+    #[serde(default)]
     pub telfhash: Option<String>,
 
     /// Tags which may show further details of the file type
+    #[serde(default)]
     pub type_tags: Vec<String>,
 
     /// Additional attribute tags
@@ -83,6 +91,7 @@ pub struct ScanResultAttributes {
     pub tags: Vec<String>,
 
     /// File names this sample has had when submitted to VirusTotal
+    #[serde(default)]
     pub names: Vec<String>,
 
     /// When the file was last modified
@@ -113,20 +122,23 @@ pub struct ScanResultAttributes {
     pub last_submission_date: DateTime<Utc>,
 
     /// Antivirus results, where the key is the name of the antivirus software product
-    /// More info: https://docs.virustotal.com/reference/analyses-object
+    /// More info: [https://docs.virustotal.com/reference/analyses-object]
     pub last_analysis_results: HashMap<String, AnalysisResult>,
 
     /// Results from TrID, an attempt to identify the file type
-    /// See https://mark0.net/soft-trid-e.html
+    /// See [https://mark0.net/soft-trid-e.html]
+    #[serde(default)]
     pub trid: Option<Vec<TrID>>,
 
     /// Another file type detection program
+    #[serde(default)]
     pub detectiteasy: Option<DetectItEasy>,
 
     /// SHA-256 hash of the file
     pub sha256: String,
 
     /// File extension for this file type
+    #[serde(default)]
     pub type_extension: Option<String>,
 
     /// When the file was last analyzed by VirusTotal
@@ -180,16 +192,18 @@ pub struct ScanResultAttributes {
     /// The most interesting name of all the file names used with this file
     pub meaningful_name: String,
 
-    /// The file's reputation from all votes,
+    /// The file's reputation from all votes, negative means malicious;
     /// see [https://support.virustotal.com/hc/en-us/articles/115002146769-Vote-comment]
-    pub reputation: u32,
+    pub reputation: i32,
 
     /// Mach-O details, if a Mach-O file (macOS, iOS, etc)
     /// This is a vector since there is a separate [macho::MachInfo] struct per
     /// each architecture if this is a Fat Mach-O file.
+    #[serde(default)]
     pub macho_info: Option<Vec<macho::MachoInfo>>,
 
     /// Portable Executable (PE) details, if a PE32 file (Windows, OS2)
+    #[serde(default)]
     pub pe_info: Option<pe::PEInfo>,
 
     /// PE32: DotNet Assembly Information
@@ -463,6 +477,7 @@ pub struct DetectItEasy {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DetectItEasyValues {
     /// Artifacts detected in the file
+    #[serde(default)]
     pub info: Option<String>,
 
     /// File type
@@ -470,9 +485,11 @@ pub struct DetectItEasyValues {
     pub detection_type: String,
 
     /// Name of the file
-    pub name: String,
+    #[serde(default)]
+    pub name: Option<String>,
 
     /// Version
+    #[serde(default)]
     pub version: Option<String>,
 }
 
@@ -538,7 +555,8 @@ pub struct SandboxVerdict {
     pub category: SandboxVerdictCategory,
 
     /// Verdict confidence from 0 to 100.
-    pub confidence: u8,
+    #[serde(default)]
+    pub confidence: Option<u8>,
 
     /// Name of the sandbox environment
     pub sandbox_name: String,
@@ -607,13 +625,20 @@ mod tests {
     use rstest::rstest;
 
     #[rstest]
-    #[case::rtf(include_str!("../../testdata/fff40032c3dc062147c530e3a0a5c7e6acda4d1f1369fbc994cddd3c19a2de88.json"), "Rich Text Format")]
-    #[case::com(include_str!("../../testdata/0001a1252300b4732e4a010a5dd13a291dcb8b0ebee6febedb5152dfb0bcd488.json"), "DOS COM")]
-    #[case::word(include_str!("../../testdata/001015aafcae8a6942366cbb0e7d39c0738752a7800c41ea1c655d47b0a4d04c.json"), "MS Word Document")]
-    #[case::exedotnet(include_str!("../../testdata/417c06700c3e899f0554654102fa064385bf1d3ecec32471ac488096d81bf38c.json"), "Win32 EXE")] // .Net
-    #[case::macho(include_str!("../../testdata/b8e7a581d85807ea6659ea2f681bd16d5baa7017ff144aa3030aefba9cbcdfd3.json"), "Mach-O")]
-    #[case::exe(include_str!("../../testdata/ddecc35aa198f401948c73a0d53fd93c4ecb770198ad7db308de026745c56b71.json"), "Win32 EXE")]
-    #[case::elf(include_str!("../../testdata/de10ba5e5402b46ea975b5cb8a45eb7df9e81dc81012fd4efd145ed2dce3a740.json"), "ELF")]
+    #[case::rtf(include_str!("../../testdata/fff40032c3dc062147c530e3a0a5c7e6acda4d1f1369fbc994cddd3c19a2de88.json"), "Rich Text Format"
+    )]
+    #[case::com(include_str!("../../testdata/0001a1252300b4732e4a010a5dd13a291dcb8b0ebee6febedb5152dfb0bcd488.json"), "DOS COM"
+    )]
+    #[case::word(include_str!("../../testdata/001015aafcae8a6942366cbb0e7d39c0738752a7800c41ea1c655d47b0a4d04c.json"), "MS Word Document"
+    )]
+    #[case::exedotnet(include_str!("../../testdata/417c06700c3e899f0554654102fa064385bf1d3ecec32471ac488096d81bf38c.json"), "Win32 EXE"
+    )] // .Net
+    #[case::macho(include_str!("../../testdata/b8e7a581d85807ea6659ea2f681bd16d5baa7017ff144aa3030aefba9cbcdfd3.json"), "Mach-O"
+    )]
+    #[case::exe(include_str!("../../testdata/ddecc35aa198f401948c73a0d53fd93c4ecb770198ad7db308de026745c56b71.json"), "Win32 EXE"
+    )]
+    #[case::elf(include_str!("../../testdata/de10ba5e5402b46ea975b5cb8a45eb7df9e81dc81012fd4efd145ed2dce3a740.json"), "ELF"
+    )]
     fn deserialize_valid_report(#[case] report: &str, #[case] file_type: &str) {
         let report: FileReportRequestResponse =
             serde_json::from_str(report).expect("failed to deserialize VT report");

@@ -88,7 +88,17 @@ pub struct ElfHeader {
     pub num_prog_headers: u64,
 
     /// ELF32 or ELF64
-    pub class: String,
+    pub class: ElfClass,
+}
+
+/// Type of ELF, 32 or 64-bit
+#[derive(Clone, Copy, Debug, Hash, Serialize, Deserialize)]
+pub enum ElfClass {
+    /// 32-bit ELF
+    ELF32,
+
+    /// 64-bit ELF
+    ELF64,
 }
 
 /// Imported or Exported ELF symbols

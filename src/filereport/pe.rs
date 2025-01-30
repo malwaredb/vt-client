@@ -192,7 +192,8 @@ pub mod dotnet {
         pub hashalgid: u64,
 
         /// Specific characteristics of the assembly, such as x86, AMD64; human-readable
-        pub flags_text: String,
+        #[serde(default)]
+        pub flags_text: Option<String>,
 
         /// Build number
         pub buildnumber: u64,
