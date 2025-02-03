@@ -508,6 +508,7 @@ impl From<String> for VirusTotalClient {
 #[cfg(test)]
 mod test {
     use super::*;
+    use sha2::{Digest, Sha256};
 
     #[tokio::test]
     #[ignore]
@@ -540,7 +541,7 @@ mod test {
                     unreachable!("No way this should work");
                 }
                 Err(err) => {
-                    assert_eq!(err, *crate::errors::NOT_FOUND_ERROR);
+                    assert_eq!(err, *errors::NOT_FOUND_ERROR);
                 }
             }
 
@@ -548,11 +549,18 @@ mod test {
                 .download("abc91ba39ea3220d23458f8049ed900c16ce1023")
                 .await;
             match response {
-                Ok(_) => {
-                    unreachable!("This shouldn't work, unless you have VT Premium")
+                Ok(bytes) => {
+                    let mut sha256 = Sha256::new();
+                    sha256.update(&bytes);
+                    let sha256 = sha256.finalize();
+                    let sha256 = hex::encode(sha256);
+                    assert_eq!(
+                        sha256,
+                        "de10ba5e5402b46ea975b5cb8a45eb7df9e81dc81012fd4efd145ed2dce3a740"
+                    );
                 }
                 Err(e) => {
-                    assert_eq!(e, *crate::errors::FORBIDDEN_ERROR);
+                    assert_eq!(e, *errors::FORBIDDEN_ERROR);
                 }
             }
         } else {

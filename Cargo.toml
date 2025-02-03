@@ -29,6 +29,8 @@ tokio = { workspace = true, features = ["fs"] }
 zeroize = { workspace = true, features = ["derive"], default-features = false }
 
 [dev-dependencies]
+hex = { workspace = true, features = ["alloc"], default-features = false }
+sha2 = { workspace = true, default-features = false }
 tokio = { workspace = true, features = ["rt", "macros"], default-features = false }
 tokio-test = { workspace = true }
 rstest = { workspace = true, default-features = false }
