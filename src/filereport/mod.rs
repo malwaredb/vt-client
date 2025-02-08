@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 /// Report details for a Linux/Unix/BSD file
 pub mod elf;
 

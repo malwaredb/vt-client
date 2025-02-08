@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+
 use std::fmt::{Debug, Display, Formatter};
 use std::ops::{Add, BitOr, Shl, Shr};
 
