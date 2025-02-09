@@ -12,6 +12,7 @@ pub struct MachoInfo {
     pub headers: MachoHeader,
 
     /// Commands section
+    #[serde(default)]
     pub commands: MachoCommands,
 
     /// Segments
@@ -46,7 +47,7 @@ pub struct MachoHeader {
 }
 
 /// Mach-O Load Commands
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct MachoCommands(pub Vec<HashMap<String, String>>);
 
 /// Mach-O Segment information

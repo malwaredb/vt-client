@@ -58,7 +58,7 @@ pub struct ScanResultAttributes {
     /// List of tags related to the file's capabilities
     /// Requires VirusTotal Premium
     #[serde(default)]
-    pub capabilities_tags: Option<Vec<String>>,
+    pub capabilities_tags: Vec<String>,
 
     /// Extracted malware configuration
     /// Requires VirusTotal Premium
@@ -125,12 +125,13 @@ pub struct ScanResultAttributes {
 
     /// Antivirus results, where the key is the name of the antivirus software product
     /// More info: [https://docs.virustotal.com/reference/analyses-object]
+    #[serde(default)]
     pub last_analysis_results: HashMap<String, AnalysisResult>,
 
     /// Results from TrID, an attempt to identify the file type
     /// See [https://mark0.net/soft-trid-e.html]
     #[serde(default)]
-    pub trid: Option<Vec<TrID>>,
+    pub trid: Vec<TrID>,
 
     /// Another file type detection program
     #[serde(default)]
@@ -618,6 +619,7 @@ pub struct SigmaAnalysisResults {
     pub rule_source: String,
 
     /// The `HashMap` likely has one field: "values" which is another map of event data
+    #[serde(default)]
     pub match_context: Vec<HashMap<String, serde_json::Value>>,
 }
 

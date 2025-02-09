@@ -110,6 +110,7 @@ pub mod dotnet {
         pub tables_rows_map_log: String,
 
         /// Other assemblies used by this sample
+        #[serde(default)]
         pub external_assemblies: HashMap<String, ExternalAssembly>,
 
         /// Type definition list
@@ -126,6 +127,7 @@ pub mod dotnet {
         pub assembly_flags_txt: String,
 
         /// Information about assembly streams
+        #[serde(default)]
         pub streams: HashMap<String, Stream>,
 
         /// Number of tables present
