@@ -3,6 +3,7 @@
 
 This is logic for interacting with [VirusTotal](https://www.virustotal.com)'s [V3 API](https://virustotal.readme.io/reference/overview). At present, only the following actions are supported:
 * Fetch file report: this gets the anti-virus scan data for a given sample, and there are examples in the `testdata/` directory.
+  * The goal is for the file report to have all the possible fields for increased ease of use.
 * Request re-scan: ask VirusTotal to run a given sample through their collection of anti-virus applications and analysis tools.
 * Submit a sample: send a sample to VirusTotal for analysis.
 * Download a sample: download the original sample from VirusTotal (not fully tested, requires VirusTotal Premium).
@@ -18,5 +19,5 @@ It's recommended to use the `native-tls-vendored` feature to avoid OpenSSL build
 
 ```toml
 [target.'cfg(target_env = "musl")'.dependencies]
-malwaredb-virustotal = { version = "0.2", features = ["native-tls-vendored"] }
+malwaredb-virustotal = { version = "0.3", features = ["native-tls-vendored"] }
 ```
