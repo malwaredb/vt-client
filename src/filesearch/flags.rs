@@ -97,6 +97,45 @@ pub enum FileType {
     /// PE32 files, just .exe
     PeExe,
 
+    /// Perl script
+    Perl,
+
+    /// PHP script
+    Php,
+
+    /// PowerPoint, any type
+    PowerPoint,
+
+    /// PowerPoint, older DOCFILE format
+    Ppt,
+
+    /// PowerPoint, newer Zip & XML-based format
+    Pptx,
+
+    /// Python script
+    Python,
+
+    /// Powershell script
+    Ps1,
+
+    /// Shell or other command line script or scripting language
+    Script,
+
+    /// Shell or other command line script
+    Shell,
+
+    /// Source code file
+    Source,
+
+    /// Symbian binaries for Nokia phones
+    Symbian,
+
+    /// Visual Basic for Applications script
+    Vba,
+
+    /// Visual Basic Script
+    Vbs,
+
     /// 16-bit Windows (.exe or .dll, old Windows)
     Win16,
 
@@ -105,6 +144,9 @@ pub enum FileType {
 
     /// Any PE32 file which could run on Windows
     Windows,
+
+    /// Windows CE, for embedded devices
+    WindowsCE,
 
     /// Windows installer file
     WindowsMSI,
@@ -141,9 +183,23 @@ impl Display for FileType {
             FileType::PE32 => write!(f, "type:peexe OR type:pedll"),
             FileType::PeDll => write!(f, "type:pedll"),
             FileType::PeExe => write!(f, "type:peexe"),
+            FileType::Perl => write!(f, "type:perl"),
+            FileType::Php => write!(f, "type:php"),
+            FileType::Ps1 => write!(f, "type:ps1"),
+            FileType::PowerPoint => write!(f, "type:powerpoint"),
+            FileType::Ppt => write!(f, "type:ppt"),
+            FileType::Pptx => write!(f, "type:pptx"),
+            FileType::Python => write!(f, "type:python"),
+            FileType::Source => write!(f, "type:source"),
+            FileType::Script => write!(f, "type:script"),
+            FileType::Shell => write!(f, "type:shell"),
+            FileType::Symbian => write!(f, "type:symbian"),
+            FileType::Vba => write!(f, "type:vba"),
+            FileType::Vbs => write!(f, "type:vbs"),
             FileType::Win16 => write!(f, "type:win16"),
             FileType::Win32 => write!(f, "type:win32"),
             FileType::Windows => write!(f, "type:windows"),
+            FileType::WindowsCE => write!(f, "type:windowsce"),
             FileType::WindowsMSI => write!(f, "type:msi"),
         }
     }
