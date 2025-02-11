@@ -1,6 +1,6 @@
 [package]
 name = "malwaredb-virustotal"
-version = "0.2.4" # until Starship learns to read the workspace version
+version = "0.3.0" # until Starship learns to read the workspace version
 # version.workspace = true
 description = "Logic and datatypes for interacting with VirusTotal"
 keywords = ["cybersecurity", "malware", "malware-analysis", "virustotal"]
@@ -51,11 +51,11 @@ edition = "2021"
 homepage = "https://malwaredb.net/"
 license = "Apache-2.0"
 repository = "https://github.com/malwaredb/vt-client"
-version = "0.2.4"
+version = "0.3.0"
 
 [workspace.dependencies]
 # Internal depencency
-malwaredb-virustotal = { version = "0.2", path = ".", default-features = false }
+malwaredb-virustotal = { version = "0.3", path = ".", default-features = false }
 
 anyhow = { version = "1.0", default-features = false }
 bytes = { version = "1.9", default-features = false }
