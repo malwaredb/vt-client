@@ -29,7 +29,7 @@ pub struct PEInfo {
 
     /// Import hash
     /// [https://www.mandiant.com/resources/blog/tracking-malware-import-hashing]
-    pub imphash: String,
+    pub imphash: Option<String>,
 
     /// Section information
     #[serde(default)]
