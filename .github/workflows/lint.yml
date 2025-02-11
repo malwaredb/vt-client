@@ -60,7 +60,10 @@ jobs:
         uses: dtolnay/rust-toolchain@53c04d3685fcc3ca67ce478eb9c2ea5c051a4a63 # nightly
 
       - name: Install cargo-udeps
-        run: cargo install cargo-udeps --locked
+        run: |
+          wget https://github.com/est31/cargo-udeps/releases/download/v0.1.54/cargo-udeps-v0.1.54-x86_64-unknown-linux-musl.tar.gz
+          tar -xzf cargo-udeps-v0.1.54-x86_64-unknown-linux-musl.tar.gz
+          mv cargo-udeps-v0.1.54-x86_64-unknown-linux-musl/cargo-udeps ~/.cargo/bin/
 
       - name: Run udeps
         run: cargo +nightly udeps
