@@ -21,8 +21,8 @@ pub struct PEInfo {
     #[serde(default)]
     pub compiler_product_versions: Vec<String>,
 
-    /// Starting point for execution
-    pub entry_point: u64,
+    /// Starting point for execution, absent for libraries
+    pub entry_point: Option<u64>,
 
     /// CPU target for this program
     pub machine_type: u32,
@@ -209,6 +209,6 @@ pub mod dotnet {
         pub revisionnumber: u64,
 
         /// Assembly name
-        pub name: String,
+        pub name: Option<String>,
     }
 }

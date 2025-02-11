@@ -95,12 +95,13 @@ pub struct ElfHeader {
 
 /// Type of ELF, 32 or 64-bit
 #[derive(Clone, Copy, Debug, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "UPPERCASE")]
 pub enum ElfClass {
     /// 32-bit ELF
+    #[serde(alias = "elf32")]
     ELF32,
 
     /// 64-bit ELF
+    #[serde(alias = "elf64")]
     ELF64,
 }
 

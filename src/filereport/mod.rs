@@ -193,7 +193,7 @@ pub struct ScanResultAttributes {
     pub packers: HashMap<String, String>,
 
     /// The most interesting name of all the file names used with this file
-    pub meaningful_name: String,
+    pub meaningful_name: Option<String>,
 
     /// The file's reputation from all votes, negative means malicious;
     /// see [https://support.virustotal.com/hc/en-us/articles/115002146769-Vote-comment]

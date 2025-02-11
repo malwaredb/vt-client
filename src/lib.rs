@@ -107,6 +107,7 @@ impl From<std::io::Error> for VirusTotalError {
 pub struct VirusTotalClient {
     /// The API key used to interact with VirusTotal
     #[cfg_attr(feature = "clap", arg(long, env = "VT_API_KEY"))]
+    #[serde(alias = "vt_api_key")]
     key: String,
 }
 
