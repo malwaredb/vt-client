@@ -499,6 +499,9 @@ impl VirusTotalClient {
     /// let client = VirusTotalClient::new(std::env::var("VT_API_KEY").unwrap());
     /// // Find PDFs, which are benign, have a fill-able form, and Javascript, first seen yesterday
     /// # tokio_test::block_on(async {
+    /// #[cfg(not(feature = "chrono"))]
+    /// let result = client.search(flags::FileType::Pdf + flags::BENIGN + flags::Tag::PdfForm + flags::Tag::PdfJs).await.unwrap();
+    /// #[cfg(feature = "chrono")]
     /// let result = client.search(flags::FileType::Pdf + flags::BENIGN + flags::Tag::PdfForm + flags::Tag::PdfJs + flags::FirstSubmission::days(1)).await.unwrap();
     /// # })
     /// ```

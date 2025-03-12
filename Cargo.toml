@@ -12,6 +12,7 @@ repository.workspace = true
 
 [features]
 default = []
+chrono = ["dep:chrono"]
 clap = ["dep:clap"]
 native-tls = ["reqwest/native-tls"]
 native-tls-vendored = ["reqwest/native-tls-vendored"]
@@ -22,7 +23,7 @@ unsafe-serialization = []
 
 [dependencies]
 bytes = { workspace = true, default-features = false }
-chrono = { workspace = true, features = ["clock", "serde"], default-features = false }
+chrono = { workspace = true, features = ["clock", "serde"], default-features = false, optional = true }
 clap = { workspace = true, features = ["derive", "env", "std"], default-features = false, optional = true }
 reqwest = { workspace = true, features = ["gzip", "multipart", "stream"], default-features = true }
 serde = { workspace = true, features = ["derive"] }
@@ -42,7 +43,7 @@ rstest = { workspace = true, default-features = false }
 development = ["tokio-test"]
 
 [package.metadata.docs.rs]
-features = ["clap"]
+features = ["chrono", "clap"]
 
 [workspace]
 resolver = "2"

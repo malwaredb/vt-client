@@ -11,7 +11,9 @@ pub mod pe;
 
 use crate::VirusTotalError;
 
+#[cfg(feature = "chrono")]
 use chrono::serde::{ts_seconds, ts_seconds_option};
+#[cfg(feature = "chrono")]
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -52,8 +54,13 @@ pub struct FileReportData {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ScanResultAttributes {
     /// When the file was created, often spoofed by malware
+    #[cfg(feature = "chrono")]
     #[serde(default, with = "ts_seconds_option")]
     pub creation_date: Option<DateTime<Utc>>,
+
+    /// When the file was created, often spoofed by malware
+    #[cfg(not(feature = "chrono"))]
+    pub creation_date: Option<u64>,
 
     /// List of tags related to the file's capabilities
     /// Requires VirusTotal Premium
@@ -97,12 +104,22 @@ pub struct ScanResultAttributes {
     pub names: Vec<String>,
 
     /// When the file was last modified
+    #[cfg(feature = "chrono")]
     #[serde(with = "ts_seconds")]
     pub last_modification_date: DateTime<Utc>,
 
+    /// When the file was last modified
+    #[cfg(not(feature = "chrono"))]
+    pub last_modification_date: u64,
+
     /// Another first seen field
+    #[cfg(feature = "chrono")]
     #[serde(default, with = "ts_seconds_option")]
     pub first_seen_itw_date: Option<DateTime<Utc>>,
+
+    /// Another first seen field
+    #[cfg(not(feature = "chrono"))]
+    pub first_seen_itw_date: Option<u64>,
 
     /// Type tags which can be used with VirusTotal Intelligence
     pub type_tag: String,
@@ -120,8 +137,13 @@ pub struct ScanResultAttributes {
     pub popular_threat_classification: Option<PopularThreatClassification>,
 
     /// When the file was last submitted to VirusTotal
+    #[cfg(feature = "chrono")]
     #[serde(with = "ts_seconds")]
     pub last_submission_date: DateTime<Utc>,
+
+    /// When the file was last submitted to VirusTotal
+    #[cfg(not(feature = "chrono"))]
+    pub last_submission_date: u64,
 
     /// Antivirus results, where the key is the name of the antivirus software product
     /// More info: [https://docs.virustotal.com/reference/analyses-object]
@@ -145,15 +167,25 @@ pub struct ScanResultAttributes {
     pub type_extension: Option<String>,
 
     /// When the file was last analyzed by VirusTotal
+    #[cfg(feature = "chrono")]
     #[serde(with = "ts_seconds")]
     pub last_analysis_date: DateTime<Utc>,
+
+    /// When the file was last analyzed by VirusTotal
+    #[cfg(not(feature = "chrono"))]
+    pub last_analysis_date: u64,
 
     /// The number of unique sources which have submitted this file
     pub unique_sources: u32,
 
     /// When the file was first submitted to VirusTotal
+    #[cfg(feature = "chrono")]
     #[serde(with = "ts_seconds")]
     pub first_submission_date: DateTime<Utc>,
+
+    /// When the file was first submitted to VirusTotal
+    #[cfg(not(feature = "chrono"))]
+    pub first_submission_date: u64,
 
     /// MD-5 hash of the file
     pub md5: String,

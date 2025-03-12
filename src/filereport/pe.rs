@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
+#[cfg(feature = "chrono")]
 use chrono::serde::ts_seconds_option;
+#[cfg(feature = "chrono")]
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -14,8 +16,13 @@ pub struct PEInfo {
     pub rich_pe_header_hash: Option<String>,
 
     /// When the program was compiled, can be spoofed
+    #[cfg(feature = "chrono")]
     #[serde(default, with = "ts_seconds_option")]
     pub timestamp: Option<DateTime<Utc>>,
+
+    /// When the program was compiled, can be spoofed
+    #[cfg(not(feature = "chrono"))]
+    pub timestamp: Option<u64>,
 
     /// Compiler information, if available
     #[serde(default)]
