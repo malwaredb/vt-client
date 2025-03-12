@@ -16,6 +16,7 @@ clap = ["dep:clap"]
 native-tls = ["reqwest/native-tls"]
 native-tls-vendored = ["reqwest/native-tls-vendored"]
 rustls-tls = ["reqwest/rustls-tls"]
+tokio = ["dep:tokio"]
 tracing = ["dep:tracing"]
 unsafe-serialization = []
 
@@ -26,7 +27,7 @@ clap = { workspace = true, features = ["derive", "env", "std"], default-features
 reqwest = { workspace = true, features = ["gzip", "multipart", "stream"], default-features = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true, features = ["alloc"], default-features = false }
-tokio = { workspace = true, features = ["fs"] }
+tokio = { workspace = true, features = ["fs"], default-features = false, optional = true }
 tracing = { workspace = true, default-features = false, optional = true }
 zeroize = { workspace = true, features = ["derive"], default-features = false }
 

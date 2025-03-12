@@ -30,7 +30,6 @@ use bytes::Bytes;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::multipart::{Form, Part};
 use serde::{Deserialize, Serialize, Serializer};
-use tokio::fs::File;
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
 const THIRTY_TWO_MEGABYTES: u64 = 32 * 1024 * 1024;
@@ -92,7 +91,7 @@ impl From<FromUtf8Error> for VirusTotalError {
     }
 }
 
-impl From<std::io::Error> for VirusTotalError {
+impl From<Error> for VirusTotalError {
     fn from(value: Error) -> Self {
         Self {
             message: "IO error".into(),
@@ -255,8 +254,40 @@ impl VirusTotalClient {
     {
         let client = self.client()?;
 
-        let file = File::open(&path).await?;
-        let size = file.metadata().await?.len();
+        #[cfg(feature = "tokio")]
+        let file = tokio::fs::File::open(&path).await.map_err(|e| {
+            #[cfg(feature = "tracing")]
+            tracing::error!("Error opening file for VirusTotal submission: {e}");
+            e
+        })?;
+
+        #[cfg(not(feature = "tokio"))]
+        let file = std::fs::File::open(&path).map_err(|e| {
+            #[cfg(feature = "tracing")]
+            tracing::error!("Error opening file for VirusTotal submission: {e}");
+            e
+        })?;
+
+        #[cfg(feature = "tokio")]
+        let size = file
+            .metadata()
+            .await
+            .map_err(|e| {
+                #[cfg(feature = "tracing")]
+                tracing::error!("Error getting file size: {e}");
+                e
+            })?
+            .len();
+
+        #[cfg(not(feature = "tokio"))]
+        let size = file
+            .metadata()
+            .map_err(|e| {
+                #[cfg(feature = "tracing")]
+                tracing::error!("Error getting file size: {e}");
+                e
+            })?
+            .len();
 
         let url = if size >= THIRTY_TWO_MEGABYTES {
             self.get_upload_url().await?
