@@ -853,6 +853,7 @@ dependencies = [
  "sha2",
  "tokio",
  "tokio-test",
+ "tracing",
  "zeroize",
 ]
 

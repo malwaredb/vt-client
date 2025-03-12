@@ -155,22 +155,34 @@ impl VirusTotalClient {
             .gzip(true)
             .default_headers(headers)
             .build()
+            .map_err(|e| {
+                #[cfg(feature = "tracing")]
+                tracing::error!("Error creating VirusTotal client: {e}");
+                e
+            })
     }
 
     /// Get the unparsed file report from VirusTotal for an MD5, SHA-1, or SHA-256 hash, which is assumed to be valid.
     #[inline]
     pub async fn get_report_raw(&self, file_hash: &str) -> Result<Bytes, VirusTotalError> {
-        let client = self.client()?;
-        let bytes = client
+        self.client()?
             .get(format!(
                 "https://www.virustotal.com/api/v3/files/{file_hash}"
             ))
             .send()
-            .await?
+            .await
+            .map_err(|e| {
+                #[cfg(feature = "tracing")]
+                tracing::error!("Error getting VirusTotal report: {e}");
+                e
+            })?
             .bytes()
-            .await?;
-
-        Ok(bytes)
+            .await
+            .map_err(|e| {
+                #[cfg(feature = "tracing")]
+                tracing::error!("Error getting VirusTotal report: {e}");
+                e.into()
+            })
     }
 
     /// Get a parsed file report from VirusTotal for an MD5, SHA-1, or SHA-256 hash, which is assumed to be valid.
@@ -188,18 +200,25 @@ impl VirusTotalClient {
     /// Request VirusTotal rescan a file for an MD5, SHA-1, or SHA-256 hash, and receive the unparsed response
     #[inline]
     pub async fn request_rescan_raw(&self, file_hash: &str) -> Result<Bytes, VirusTotalError> {
-        let client = self.client()?;
-        let bytes = client
+        self.client()?
             .post(format!(
                 "https://www.virustotal.com/api/v3/files/{file_hash}/analyse"
             ))
             .header("content-length", "0")
             .send()
-            .await?
+            .await
+            .map_err(|e| {
+                #[cfg(feature = "tracing")]
+                tracing::error!("Error requesting VirusTotal rescan: {e}");
+                e
+            })?
             .bytes()
-            .await?;
-
-        Ok(bytes)
+            .await
+            .map_err(|e| {
+                #[cfg(feature = "tracing")]
+                tracing::error!("Error parsing VirusTotal rescan response: {e}");
+                e.into()
+            })
     }
 
     /// Request VirusTotal rescan a file for an MD5, SHA-1, or SHA-256 hash, which is assumed to be valid.
@@ -247,16 +266,24 @@ impl VirusTotalClient {
 
         let form = Form::new().file("file", path).await?;
 
-        let bytes = client
+        client
             .post(url)
             .header("accept", "application/json")
             .multipart(form)
             .send()
-            .await?
+            .await
+            .map_err(|e| {
+                #[cfg(feature = "tracing")]
+                tracing::error!("Error submitting VirusTotal file: {e}");
+                e
+            })?
             .bytes()
-            .await?;
-
-        Ok(bytes)
+            .await
+            .map_err(|e| {
+                #[cfg(feature = "tracing")]
+                tracing::error!("Error parsing VirusTotal file submission response: {e}");
+                e.into()
+            })
     }
 
     /// Submit a file by path to VirusTotal and receive parsed response.
@@ -304,16 +331,24 @@ impl VirusTotalClient {
                 .mime_str("application/octet-stream")?,
         );
 
-        let bytes = client
+        client
             .post(url)
             .header("accept", "application/json")
             .multipart(form)
             .send()
-            .await?
+            .await
+            .map_err(|e| {
+                #[cfg(feature = "tracing")]
+                tracing::error!("Error submitting VirusTotal bytes: {e}");
+                e
+            })?
             .bytes()
-            .await?;
-
-        Ok(bytes)
+            .await
+            .map_err(|e| {
+                #[cfg(feature = "tracing")]
+                tracing::error!("Error parsing VirusTotal bytes submission response: {e}");
+                e.into()
+            })
     }
 
     /// Submit bytes to VirusTotal and receive parsed response.
@@ -385,9 +420,15 @@ impl VirusTotalClient {
             };
         }
 
-        let body = response.bytes().await?;
-
-        Ok(body.to_vec())
+        Ok(response
+            .bytes()
+            .await
+            .map_err(|e| {
+                #[cfg(feature = "tracing")]
+                tracing::error!("Error parsing VirusTotal file response: {e}");
+                e
+            })?
+            .to_vec())
     }
 
     /// Search VirusTotal for files matching some search parameters, receive unparsed response.
@@ -402,8 +443,17 @@ impl VirusTotalClient {
             self.key.as_str()
         );
 
-        let body = self.client()?.get(url).send().await?.bytes().await?;
-        Ok(body)
+        self.client()?
+            .get(url)
+            .send()
+            .await?
+            .bytes()
+            .await
+            .map_err(|e| {
+                #[cfg(feature = "tracing")]
+                tracing::error!("Error parsing VirusTotal search result: {e}");
+                e.into()
+            })
     }
 
     /// Search VirusTotal for files matching some search parameters. Requires VT Premium!
@@ -481,9 +531,19 @@ impl VirusTotalClient {
         client
             .get(format!("https://www.virustotal.com/api/v3/{url}"))
             .send()
-            .await?
+            .await
+            .map_err(|e| {
+                #[cfg(feature = "tracing")]
+                tracing::error!("Error requesting VirusTotal other: {e}");
+                e
+            })?
             .bytes()
             .await
+            .map_err(|e| {
+                #[cfg(feature = "tracing")]
+                tracing::error!("Error parsing VirusTotal other response: {e}");
+                e
+            })
     }
 }
 
