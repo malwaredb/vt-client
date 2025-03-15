@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::filereport::{AnalysisResult, LastAnalysisStats, Votes};
+use crate::common::{AnalysisResult, LastAnalysisStats, Votes};
 use crate::VirusTotalError;
 
 use std::collections::HashMap;

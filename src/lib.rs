@@ -5,6 +5,8 @@
 #![deny(clippy::all)]
 #![forbid(unsafe_code)]
 
+/// Data types common to a few data types
+pub mod common;
 /// Logic for parsing the domain report data from VirusTotal
 pub mod domainreport;
 /// Pre-defined error types for Virus Total allowing for error comparison.
