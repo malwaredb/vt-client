@@ -535,21 +535,22 @@ pub struct LastAnalysisStats {
     pub harmless: u32,
 
     /// Antivirus products which don't support this file type
-    #[serde(rename = "type-unsupported")]
-    pub type_unsupported: u32,
+    #[serde(rename = "type-unsupported", default)]
+    pub type_unsupported: Option<u32>,
 
     /// Antivirus products which indicate the file is suspicious
     pub suspicious: u32,
 
     /// Antivirus products which timed out trying to evaluate the file
-    #[serde(rename = "confirmed-timeout")]
-    pub confirmed_timeout: u32,
+    #[serde(rename = "confirmed-timeout", default)]
+    pub confirmed_timeout: Option<u32>,
 
     /// Antivirus products which timed out trying to evaluate the file
     pub timeout: u32,
 
     /// Antivirus products which failed to analyze the file
-    pub failure: u32,
+    #[serde(default)]
+    pub failure: Option<u32>,
 
     /// Antivirus products which indicate the file is malicious
     pub malicious: u32,
@@ -573,7 +574,10 @@ impl LastAnalysisStats {
 
     /// Return the number of antivirus products which had errors for this file
     pub fn error_count(&self) -> u32 {
-        self.type_unsupported + self.confirmed_timeout + self.timeout + self.failure
+        self.type_unsupported.unwrap_or_default()
+            + self.confirmed_timeout.unwrap_or_default()
+            + self.timeout
+            + self.failure.unwrap_or_default()
     }
 
     /// In an effort to error on the side of caution, call a file benign is no antivirus products

@@ -5,6 +5,8 @@
 #![deny(clippy::all)]
 #![forbid(unsafe_code)]
 
+/// Logic for parsing the domain report data from VirusTotal
+pub mod domainreport;
 /// Pre-defined error types for Virus Total allowing for error comparison.
 /// [https://virustotal.readme.io/reference/errors]
 pub mod errors;
@@ -15,6 +17,7 @@ pub mod filerescan;
 /// Logic for searching for files based on types, submission, and attributes
 pub mod filesearch;
 
+use crate::domainreport::DomainReportRequestResponse;
 use crate::filereport::{FileReportData, FileReportRequestResponse};
 use crate::filerescan::{FileRescanRequestData, FileRescanRequestResponse};
 use crate::filesearch::FileSearchResponse;
@@ -26,6 +29,7 @@ use std::path::Path;
 use std::str::FromStr;
 use std::string::FromUtf8Error;
 
+use crate::domainreport::DomainReportData;
 use bytes::Bytes;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::multipart::{Form, Part};
@@ -163,7 +167,7 @@ impl VirusTotalClient {
 
     /// Get the unparsed file report from VirusTotal for an MD5, SHA-1, or SHA-256 hash, which is assumed to be valid.
     #[inline]
-    pub async fn get_report_raw(&self, file_hash: &str) -> Result<Bytes, VirusTotalError> {
+    pub async fn get_file_report_raw(&self, file_hash: &str) -> Result<Bytes, VirusTotalError> {
         self.client()?
             .get(format!(
                 "https://www.virustotal.com/api/v3/files/{file_hash}"
@@ -185,8 +189,11 @@ impl VirusTotalClient {
     }
 
     /// Get a parsed file report from VirusTotal for an MD5, SHA-1, or SHA-256 hash, which is assumed to be valid.
-    pub async fn get_report(&self, file_hash: &str) -> Result<FileReportData, VirusTotalError> {
-        let body = self.get_report_raw(file_hash).await?;
+    pub async fn get_file_report(
+        &self,
+        file_hash: &str,
+    ) -> Result<FileReportData, VirusTotalError> {
+        let body = self.get_file_report_raw(file_hash).await?;
         let json_response = String::from_utf8(body.to_ascii_lowercase())?;
         let report: FileReportRequestResponse = serde_json::from_str(&json_response)?;
 
@@ -198,7 +205,7 @@ impl VirusTotalClient {
 
     /// Request VirusTotal rescan a file for an MD5, SHA-1, or SHA-256 hash, and receive the unparsed response
     #[inline]
-    pub async fn request_rescan_raw(&self, file_hash: &str) -> Result<Bytes, VirusTotalError> {
+    pub async fn request_file_rescan_raw(&self, file_hash: &str) -> Result<Bytes, VirusTotalError> {
         self.client()?
             .post(format!(
                 "https://www.virustotal.com/api/v3/files/{file_hash}/analyse"
@@ -228,15 +235,15 @@ impl VirusTotalClient {
     /// // Use of `.unwrap()` for demonstration, don't actually do this.
     /// let client = VirusTotalClient::new(std::env::var("VT_API_KEY").unwrap());
     /// # tokio_test::block_on(async {
-    /// let response = client.request_rescan("abc91ba39ea3220d23458f8049ed900c16ce1023").await.unwrap();
+    /// let response = client.request_file_rescan("abc91ba39ea3220d23458f8049ed900c16ce1023").await.unwrap();
     /// assert_eq!(response.rescan_type, "analysis");
     /// # })
     /// ```
-    pub async fn request_rescan(
+    pub async fn request_file_rescan(
         &self,
         file_hash: &str,
     ) -> Result<FileRescanRequestData, VirusTotalError> {
-        let body = self.request_rescan_raw(file_hash).await?;
+        let body = self.request_file_rescan_raw(file_hash).await?;
         let json_response = String::from_utf8(body.to_ascii_lowercase())?;
         let report: FileRescanRequestResponse = serde_json::from_str(&json_response)?;
 
@@ -546,6 +553,40 @@ impl VirusTotalClient {
         Ok(response)
     }
 
+    /// Get a VirusTotal report for a domain, returing the raw bytes
+    #[inline]
+    pub async fn get_domain_report_raw(&self, domain: &str) -> Result<Bytes, VirusTotalError> {
+        let client = self.client()?;
+        client
+            .get(format!(
+                "https://www.virustotal.com/api/v3/domains/{domain}",
+            ))
+            .send()
+            .await?
+            .bytes()
+            .await
+            .map_err(|e| {
+                #[cfg(feature = "tracing")]
+                tracing::error!("Error requesting VirusTotal domain: {e}");
+                e.into()
+            })
+    }
+
+    /// Get a VirusTotal report for a domain, returing the raw bytes
+    pub async fn get_domain_report(
+        &self,
+        domain: &str,
+    ) -> Result<DomainReportData, VirusTotalError> {
+        let body = self.get_domain_report_raw(domain).await?;
+        let json_response = String::from_utf8(body.to_ascii_lowercase())?;
+        let report: DomainReportRequestResponse = serde_json::from_str(&json_response)?;
+
+        match report {
+            DomainReportRequestResponse::Data(data) => Ok(data),
+            DomainReportRequestResponse::Error(error) => Err(error),
+        }
+    }
+
     /// Since this crate doesn't support every Virus Total feature, this function can receive a
     /// URL fragment and return the response.
     #[inline]
@@ -605,13 +646,13 @@ mod test {
             let client = VirusTotalClient::new(api_key);
 
             let report = client
-                .get_report(HASH)
+                .get_file_report(HASH)
                 .await
                 .expect("failed to get or parse VT scan report");
             assert!(report.attributes.last_analysis_results.len() > 10);
 
             let rescan = client
-                .request_rescan(HASH)
+                .request_file_rescan(HASH)
                 .await
                 .expect("failed to get or parse VT rescan response");
             assert_eq!(rescan.rescan_type, "analysis");
@@ -622,7 +663,7 @@ mod test {
                 .await
                 .unwrap();
 
-            match client.get_report("AABBCCDD").await {
+            match client.get_file_report("AABBCCDD").await {
                 Ok(_) => {
                     unreachable!("No way this should work");
                 }

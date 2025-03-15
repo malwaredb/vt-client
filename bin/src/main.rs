@@ -47,6 +47,17 @@ struct FileReportArg {
 }
 
 #[derive(Parser, Clone)]
+struct DomainReportArg {
+    /// Fetch a file report based on a hash (MD5, SHA-1, or SHA-256)
+    #[arg(long)]
+    pub domain: String,
+
+    /// Output for the report, or display a summary only if no output was specified
+    #[arg(short, long)]
+    pub output: Option<PathBuf>,
+}
+
+#[derive(Parser, Clone)]
 struct HashArg {
     /// Download a file based on a hash (MD5, SHA-1, or SHA-256)
     pub hash: String,
@@ -67,15 +78,18 @@ impl HashArg {
 #[derive(Subcommand, Clone)]
 enum Action {
     /// Submit a file to VirusTotal
-    Submit(SubmitFileArg),
+    SubmitFile(SubmitFileArg),
 
     /// Get a report for a file, doesn't send the file to VirusTotal. Specify either a hash or a file
     /// path, which will send that file's SHA-256 hash. Specify both without an output file, and
     /// summary information for both files will be displayed.
-    GetReport(FileReportArg),
+    GetFileReport(FileReportArg),
+
+    /// Get the VirusTotal report for a domain
+    GetDomainReport(DomainReportArg),
 
     /// Request re-analysis of a file based on a hash (MD5, SHA-1, or SHA-256)
-    Rescan(HashArg),
+    RescanFile(HashArg),
 
     /// Download a file based on a hash (MD5, SHA-1, or SHA-256). Requires VT Premium!
     Download(HashArg),
@@ -87,11 +101,11 @@ enum Action {
 impl Action {
     async fn execute(&self, client: VirusTotalClient) -> Result<()> {
         match self {
-            Action::Submit(arg) => {
+            Action::SubmitFile(arg) => {
                 let response = client.submit_file_path(&arg.file).await?;
                 println!("Submitted, request id {}", response.id);
             }
-            Action::GetReport(arg) => {
+            Action::GetFileReport(arg) => {
                 if arg.file.is_none() && arg.hash.is_none() {
                     bail!("Nothing to do, neither file path nor hash were specified.");
                 }
@@ -102,7 +116,7 @@ impl Action {
                         sha256.update(contents);
                         let sha256 = sha256.finalize();
                         let sha256 = hex::encode(sha256);
-                        let response = client.get_report(&sha256).await?;
+                        let response = client.get_file_report(&sha256).await?;
                         let report = serde_json::to_string(&response)?;
                         std::fs::write(report_dest, report)?;
                         println!(
@@ -111,7 +125,7 @@ impl Action {
                             response.attributes.last_analysis_stats.av_count()
                         );
                     } else if let Some(input_hash) = &arg.hash {
-                        let response = client.get_report(input_hash).await?;
+                        let response = client.get_file_report(input_hash).await?;
                         let report = serde_json::to_string(&response)?;
                         std::fs::write(report_dest, report)?;
                         println!(
@@ -127,7 +141,7 @@ impl Action {
                         sha256.update(contents);
                         let sha256 = sha256.finalize();
                         let sha256 = hex::encode(sha256);
-                        let response = client.get_report(&sha256).await?;
+                        let response = client.get_file_report(&sha256).await?;
                         println!(
                             "AVs with detection: {} of {} for {input_file:?}",
                             response.attributes.last_analysis_stats.malicious,
@@ -136,7 +150,7 @@ impl Action {
                     }
 
                     if let Some(input_hash) = &arg.hash {
-                        let response = client.get_report(input_hash).await?;
+                        let response = client.get_file_report(input_hash).await?;
                         println!(
                             "AVs with detection: {} of {} for {input_hash}",
                             response.attributes.last_analysis_stats.malicious,
@@ -145,11 +159,32 @@ impl Action {
                     }
                 }
             }
-            Action::Rescan(arg) => {
+            Action::GetDomainReport(arg) => {
+                let report = client.get_domain_report(&arg.domain).await?;
+                println!("{}:", arg.domain);
+                println!("\tLast scan: {}", report.attributes.last_analysis_date);
+                println!(
+                    "\tMalicious counts: {}",
+                    report.attributes.last_analysis_stats.malicious
+                );
+                println!(
+                    "\tBenign count: {}",
+                    report.attributes.last_analysis_stats.harmless
+                );
+
+                if let Some(output) = &arg.output {
+                    let mut output = output.clone();
+                    if !output.ends_with(".json") {
+                        output.set_extension("json");
+                    }
+                    std::fs::write(output, serde_json::to_string_pretty(&report)?)?;
+                }
+            }
+            Action::RescanFile(arg) => {
                 if !arg.valid() {
                     bail!("Hash {} isn't an MD5, SHA-1, or SHA-256 hash.", arg.hash);
                 }
-                let response = client.request_rescan(&arg.hash).await?;
+                let response = client.request_file_rescan(&arg.hash).await?;
                 println!("Rescan for {} requested: {}", arg.hash, response.id);
             }
             Action::Download(arg) => {
