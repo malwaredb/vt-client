@@ -15,8 +15,8 @@ hex = { workspace = true, features = ["alloc"], default-features = false }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true, features = ["alloc"], default-features = false }
 sha2 = { workspace = true, default-features = false }
-malwaredb-virustotal = { workspace = true, features = ["clap"], default-features = false }
+malwaredb-virustotal = { workspace = true, features = ["chrono", "clap", "tokio"], default-features = false }
 tokio = { workspace = true, features = ["rt", "macros"], default-features = false }
 
 [target.'cfg(target_env = "musl")'.dependencies]
-malwaredb-virustotal = { workspace = true, features = ["clap", "native-tls-vendored"], default-features = false }
+malwaredb-virustotal = { workspace = true, features = ["chrono", "clap", "native-tls-vendored", "tokio"], default-features = false }

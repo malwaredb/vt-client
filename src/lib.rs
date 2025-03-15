@@ -318,13 +318,10 @@ impl VirusTotalClient {
     }
 
     /// Submit a file by path to VirusTotal and receive parsed response.
-    pub async fn submit_file_path<P>(
+    pub async fn submit_file_path<P: AsRef<Path>>(
         &self,
         path: P,
-    ) -> Result<FileRescanRequestData, VirusTotalError>
-    where
-        P: AsRef<Path>,
-    {
+    ) -> Result<FileRescanRequestData, VirusTotalError> {
         let body = self.submit_file_path_raw(path).await?;
         let json_response = String::from_utf8(body.to_ascii_lowercase())?;
         let report: FileRescanRequestResponse = serde_json::from_str(&json_response)?;
@@ -337,14 +334,11 @@ impl VirusTotalClient {
 
     /// Submit bytes to VirusTotal and receive the unparsed response.
     #[inline]
-    pub async fn submit_bytes_raw<N>(
+    pub async fn submit_bytes_raw<N: Into<Cow<'static, str>>>(
         &self,
         data: Vec<u8>,
         name: N,
-    ) -> Result<Bytes, VirusTotalError>
-    where
-        N: Into<Cow<'static, str>>,
-    {
+    ) -> Result<Bytes, VirusTotalError> {
         let client = self.client()?;
 
         // It's unfortunate that we had to take ownership of the bytes. This is because `Path::new()`
@@ -383,14 +377,11 @@ impl VirusTotalClient {
     }
 
     /// Submit bytes to VirusTotal and receive parsed response.
-    pub async fn submit_bytes<N>(
+    pub async fn submit_bytes<N: Into<Cow<'static, str>>>(
         &self,
         data: Vec<u8>,
         name: N,
-    ) -> Result<FileRescanRequestData, VirusTotalError>
-    where
-        N: Into<Cow<'static, str>>,
-    {
+    ) -> Result<FileRescanRequestData, VirusTotalError> {
         let body = self.submit_bytes_raw(data, name).await?;
         let json_response = String::from_utf8(body.to_ascii_lowercase())?;
         let report: FileRescanRequestResponse = serde_json::from_str(&json_response)?;
@@ -465,10 +456,7 @@ impl VirusTotalClient {
     /// Search VirusTotal for files matching some search parameters, receive unparsed response.
     /// Requires VT Premium!
     #[inline]
-    pub async fn search_raw<Q>(&self, query: Q) -> Result<Bytes, VirusTotalError>
-    where
-        Q: Display,
-    {
+    pub async fn search_raw<Q: Display>(&self, query: Q) -> Result<Bytes, VirusTotalError> {
         let url = format!(
             "https://www.virustotal.com/vtapi/v2/file/search?apikey={}&query={query}",
             self.key.as_str()
@@ -505,10 +493,10 @@ impl VirusTotalClient {
     /// let result = client.search(flags::FileType::Pdf + flags::BENIGN + flags::Tag::PdfForm + flags::Tag::PdfJs + flags::FirstSubmission::days(1)).await.unwrap();
     /// # })
     /// ```
-    pub async fn search<Q>(&self, query: Q) -> Result<FileSearchResponse, VirusTotalError>
-    where
-        Q: Display,
-    {
+    pub async fn search<Q: Display>(
+        &self,
+        query: Q,
+    ) -> Result<FileSearchResponse, VirusTotalError> {
         let body = self.search_raw(&query).await?;
         let json_response = String::from_utf8(body.to_ascii_lowercase())?;
         let response: FileSearchResponse = serde_json::from_str(&json_response)?;
@@ -560,6 +548,7 @@ impl VirusTotalClient {
 
     /// Since this crate doesn't support every Virus Total feature, this function can receive a
     /// URL fragment and return the response.
+    #[inline]
     pub async fn other(&self, url: &str) -> reqwest::Result<Bytes> {
         let client = self.client()?;
         client
