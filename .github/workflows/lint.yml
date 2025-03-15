@@ -78,9 +78,11 @@ jobs:
           disable-sudo: true
           egress-policy: block
           allowed-endpoints: >
+            api.github.com:443
             crates.io:443
             github.com:443
             index.crates.io:443
+            objects.githubusercontent.com:443
             static.crates.io:443
 
       - name: Checkout repository
@@ -88,8 +90,13 @@ jobs:
 
       - name: Install Cargo Audit & Deny
         run: |
-          cargo install cargo-audit
-          cargo install cargo-deny
+          wget https://github.com/rustsec/rustsec/releases/download/cargo-audit%2Fv0.21.2/cargo-audit-x86_64-unknown-linux-musl-v0.21.2.tgz
+          tar -xzf cargo-audit-x86_64-unknown-linux-musl-v0.21.2.tgz
+          mv cargo-audit-x86_64-unknown-linux-musl-v0.21.2/cargo-audit ~/.cargo/bin/
+          
+          wget https://github.com/EmbarkStudios/cargo-deny/releases/download/0.18.2/cargo-deny-0.18.2-x86_64-unknown-linux-musl.tar.gz
+          tar -xzf cargo-deny-0.18.2-x86_64-unknown-linux-musl.tar.gz
+          mv cargo-deny-0.18.2-x86_64-unknown-linux-musl/cargo-deny ~/.cargo/bin/
 
       - name: Run Cargo Audit
         run: cargo audit
