@@ -48,13 +48,20 @@ struct FileReportArg {
 
 #[derive(Parser, Clone)]
 struct DomainReportArg {
-    /// Fetch a file report based on a hash (MD5, SHA-1, or SHA-256)
+    /// Collect VT analysis data for a given domain
     #[arg(long)]
     pub domain: String,
 
     /// Output for the report, or display a summary only if no output was specified
     #[arg(short, long)]
     pub output: Option<PathBuf>,
+}
+
+#[derive(Parser, Clone)]
+struct DomainScanArg {
+    /// A domain to be scanned
+    #[arg(long)]
+    pub domain: String,
 }
 
 #[derive(Parser, Clone)]
@@ -87,6 +94,9 @@ enum Action {
 
     /// Get the VirusTotal report for a domain
     GetDomainReport(DomainReportArg),
+
+    /// Request re-analysis of a domain
+    RescanDomain(DomainScanArg),
 
     /// Request re-analysis of a file based on a hash (MD5, SHA-1, or SHA-256)
     RescanFile(HashArg),
@@ -179,6 +189,10 @@ impl Action {
                     }
                     std::fs::write(output, serde_json::to_string_pretty(&report)?)?;
                 }
+            }
+            Action::RescanDomain(arg) => {
+                let response = client.request_domain_rescan(&arg.domain).await?;
+                println!("Rescan for {} requested: {}", arg.domain, response.id);
             }
             Action::RescanFile(arg) => {
                 if !arg.valid() {

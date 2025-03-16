@@ -2,7 +2,29 @@
 
 use crate::VirusTotalError;
 
+use std::collections::HashMap;
+use std::fmt::Display;
+
 use serde::{Deserialize, Serialize};
+
+/// Type of item for requesting a rescan or re-evaluation
+#[derive(Copy, Clone, Debug)]
+pub enum RescanRequestType {
+    /// Request re-evaluation of a domain
+    Domain,
+
+    /// Request rescan of a file
+    File,
+}
+
+impl Display for RescanRequestType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            RescanRequestType::Domain => write!(f, "domains"),
+            RescanRequestType::File => write!(f, "files"),
+        }
+    }
+}
 
 /// Report response, which could return data (success confirmation) or an error message
 #[allow(clippy::large_enum_variant)]
@@ -15,6 +37,20 @@ pub enum ReportRequestResponse<R> {
     /// Error message, report request not successful
     #[serde(rename = "error")]
     Error(VirusTotalError),
+}
+
+/// Successful file rescan response contents
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct RescanRequestData {
+    /// Rescan type, probably "analysis"
+    #[serde(rename = "type")]
+    pub rescan_type: String,
+
+    /// Rescan ID, likely not useful
+    pub id: String,
+
+    /// Links to the file analysis
+    pub links: HashMap<String, String>,
 }
 
 /// Result per each anti-virus product
@@ -106,4 +142,23 @@ pub struct Votes {
 
     /// Votes that the file is malicious
     pub malicious: u32,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn deserialize_valid_response() {
+        const RESPONSE: &str = include_str!("../../testdata/rescan.json");
+
+        let rescan: ReportRequestResponse<RescanRequestData> =
+            serde_json::from_str(RESPONSE).expect("failed to deserialize VT rescan");
+
+        if let ReportRequestResponse::Data(data) = rescan {
+            assert_eq!(data.rescan_type, "analysis");
+        } else {
+            panic!("Rescan report shouldn't be an error type");
+        }
+    }
 }
