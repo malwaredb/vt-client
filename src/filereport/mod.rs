@@ -10,7 +10,6 @@ pub mod macho;
 pub mod pe;
 
 use crate::common::{AnalysisResult, LastAnalysisStats, Votes};
-use crate::VirusTotalError;
 
 #[cfg(feature = "chrono")]
 use chrono::serde::{ts_seconds, ts_seconds_option};
@@ -18,19 +17,6 @@ use chrono::serde::{ts_seconds, ts_seconds_option};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
-/// File report response, which could return data (success confirmation) or an error message
-#[allow(clippy::large_enum_variant)]
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub enum FileReportRequestResponse {
-    /// Information about the report request
-    #[serde(rename = "data")]
-    Data(FileReportData),
-
-    /// Error message, file report request not successful
-    #[serde(rename = "error")]
-    Error(VirusTotalError),
-}
 
 /// Successful file report request response contents
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -572,6 +558,7 @@ pub struct SigmaAnalysisResults {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::common::ReportRequestResponse;
     use rstest::rstest;
 
     #[rstest]
@@ -590,10 +577,10 @@ mod tests {
     #[case::elf(include_str!("../../testdata/de10ba5e5402b46ea975b5cb8a45eb7df9e81dc81012fd4efd145ed2dce3a740.json"), "ELF"
     )]
     fn deserialize_valid_report(#[case] report: &str, #[case] file_type: &str) {
-        let report: FileReportRequestResponse =
+        let report: ReportRequestResponse<FileReportData> =
             serde_json::from_str(report).expect("failed to deserialize VT report");
 
-        if let FileReportRequestResponse::Data(data) = report {
+        if let ReportRequestResponse::Data(data) = report {
             if file_type == "Mach-O" {
                 assert!(data.attributes.macho_info.is_some());
             } else if file_type == "Win32 EXE" {
@@ -618,12 +605,12 @@ mod tests {
     #[case(include_str!("../../testdata/not_found.json"))]
     #[case(include_str!("../../testdata/wrong_key.json"))]
     fn deserialize_errors(#[case] contents: &str) {
-        let report: FileReportRequestResponse =
+        let report: ReportRequestResponse<FileReportData> =
             serde_json::from_str(contents).expect("failed to deserialize VT error response");
 
         match report {
-            FileReportRequestResponse::Data(_) => panic!("Should have been an error type!"),
-            FileReportRequestResponse::Error(_) => {}
+            ReportRequestResponse::Data(_) => panic!("Should have been an error type!"),
+            ReportRequestResponse::Error(_) => {}
         }
     }
 

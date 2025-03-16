@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::common::{AnalysisResult, LastAnalysisStats, Votes};
-use crate::VirusTotalError;
 
 use std::collections::HashMap;
 
@@ -10,19 +9,6 @@ use chrono::serde::{ts_seconds, ts_seconds_option};
 #[cfg(feature = "chrono")]
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-
-/// File report response, which could return data (success confirmation) or an error message
-#[allow(clippy::large_enum_variant)]
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub enum DomainReportRequestResponse {
-    /// Information about the report request
-    #[serde(rename = "data")]
-    Data(DomainReportData),
-
-    /// Error message, domain report request not successful
-    #[serde(rename = "error")]
-    Error(VirusTotalError),
-}
 
 /// Successful domain report request response contents
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -203,145 +189,190 @@ pub struct DnsRecord {
 
 /// DNS Record type
 #[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename(serialize = "UPPERCASE"))]
 pub enum DnsRecordType {
     /// IPv4 record
+    #[serde(alias = "a")]
     A,
 
     /// IPv6 record
+    #[serde(alias = "aaaa")]
     AAAA,
 
     /// (Andrew File System) AFS database record
+    #[serde(alias = "afsdb")]
     AFSDB,
 
     /// Address Prefix List
+    #[serde(alias = "apl")]
     APL,
 
     /// Certification Authority Authorization
+    #[serde(alias = "caa")]
     CAA,
 
     /// Child copy of DNSKEY record,
+    #[serde(alias = "cdnskey")]
     CDNSKEY,
 
     /// Child DS
+    #[serde(alias = "cds")]
     CDS,
 
     /// Certificate record
+    #[serde(alias = "cert")]
     CERT,
 
     /// Alias record
+    #[serde(alias = "cname")]
     CNAME,
 
     /// Child-to-Parent Synchronization
+    #[serde(alias = "csync")]
     CSYNC,
 
     /// DHCP identifier
+    #[serde(alias = "dhcid")]
     DHCID,
 
     /// DNSSEC Lookaside Validation record
+    #[serde(alias = "dlv")]
     DLV,
 
     /// Delegation name record
+    #[serde(alias = "dname")]
     DNAME,
 
     /// DNS Key record
-    DNSKey,
+    #[serde(alias = "dnskey")]
+    DNSKEY,
 
     /// Delegation signer
+    #[serde(alias = "ds")]
     DS,
 
     /// MAC Address 48-bit
+    #[serde(alias = "eui48")]
     EUI48,
 
     /// MAC Address 64-bit
+    #[serde(alias = "eui64")]
     EUI64,
 
     /// Host information
-    HInfo,
+    #[serde(alias = "hinfo")]
+    HINFO,
 
     /// Host Identity Protocol
+    #[serde(alias = "hip")]
     HIP,
 
     /// HTTPS Binding
+    #[serde(alias = "https")]
     HTTPS,
 
     /// IPSec key
-    IPSecKey,
+    #[serde(alias = "ipseckey")]
+    IPSECKEY,
 
     /// Key record
-    Key,
+    #[serde(alias = "key")]
+    KEY,
 
     /// Key Exchanger record
+    #[serde(alias = "kx")]
     KX,
 
     /// Location record
+    #[serde(alias = "loc")]
     LOC,
 
     /// Mail server record
+    #[serde(alias = "mx")]
     MX,
 
     /// Naming Authority Pointer
+    #[serde(alias = "naptr")]
     NAPTR,
 
     /// Authoritative name server record for the domain
+    #[serde(alias = "ns")]
     NS,
 
     /// Next Secure record
+    #[serde(alias = "nsec")]
     NSEC,
 
     /// Next Secure record version 3
+    #[serde(alias = "nsec3param")]
     NSEC3PARAM,
 
     /// OpenPGP public key record
-    OpenPGPKey,
+    #[serde(alias = "openpgpkey")]
+    OPENPGPKEY,
 
     /// Pointer record
+    #[serde(alias = "ptr")]
     PTR,
 
     /// Responsible Person for the domain
+    #[serde(alias = "rp")]
     RP,
 
     /// DNSSEC signature
+    #[serde(alias = "rrsig")]
     RRSIG,
 
     /// Signature record
+    #[serde(alias = "sig")]
     SIG,
 
     /// S/MIME certificate association
+    #[serde(alias = "smimea")]
     SMIMEA,
 
     /// Start of authoritative record
+    #[serde(alias = "soa")]
     SOA,
 
     /// Service locator
+    #[serde(alias = "srv")]
     SRV,
 
     /// SSH Public Key fingerprint
+    #[serde(alias = "sshfp")]
     SSHFP,
 
     /// Service binding
+    #[serde(alias = "svcb")]
     SVCB,
 
     /// DNSSEC trust authorities
+    #[serde(alias = "ta")]
     TA,
 
     /// Transaction key record
+    #[serde(alias = "tkey")]
     TKEY,
 
     /// Public key for main name
+    #[serde(alias = "tlsa")]
     TLSA,
 
     /// Transaction Signature for authenticating dynamic updates
+    #[serde(alias = "tsig")]
     TSIG,
 
     /// Text record
+    #[serde(alias = "txt")]
     TXT,
 
     /// Uniform Resource Locator for mapping from hostnames
+    #[serde(alias = "uri")]
     URI,
 
     /// Message digests for DNS zones
-    ZoneMD,
+    #[serde(alias = "zonemd")]
+    ZONEMD,
 }
 
 /// Popularity Entry info
@@ -363,15 +394,16 @@ pub struct PopularityRankEntry {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::common::ReportRequestResponse;
 
     #[test]
     fn haiku_org() {
         const DOMAIN_REPORT: &str = include_str!("../../testdata/haikuorg.json");
 
-        let report: DomainReportRequestResponse =
+        let report: ReportRequestResponse<DomainReportData> =
             serde_json::from_str(DOMAIN_REPORT).expect("failed to deserialize VT report");
 
-        let report = if let DomainReportRequestResponse::Data(data) = report {
+        let report = if let ReportRequestResponse::Data(data) = report {
             data
         } else {
             panic!("expected data");

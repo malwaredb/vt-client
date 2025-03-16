@@ -19,8 +19,7 @@ pub mod filerescan;
 /// Logic for searching for files based on types, submission, and attributes
 pub mod filesearch;
 
-use crate::domainreport::DomainReportRequestResponse;
-use crate::filereport::{FileReportData, FileReportRequestResponse};
+use crate::filereport::FileReportData;
 use crate::filerescan::{FileRescanRequestData, FileRescanRequestResponse};
 use crate::filesearch::FileSearchResponse;
 
@@ -31,6 +30,7 @@ use std::path::Path;
 use std::str::FromStr;
 use std::string::FromUtf8Error;
 
+use crate::common::ReportRequestResponse;
 use crate::domainreport::DomainReportData;
 use bytes::Bytes;
 use reqwest::header::{HeaderMap, HeaderValue};
@@ -197,11 +197,11 @@ impl VirusTotalClient {
     ) -> Result<FileReportData, VirusTotalError> {
         let body = self.get_file_report_raw(file_hash).await?;
         let json_response = String::from_utf8(body.to_ascii_lowercase())?;
-        let report: FileReportRequestResponse = serde_json::from_str(&json_response)?;
+        let report: ReportRequestResponse<FileReportData> = serde_json::from_str(&json_response)?;
 
         match report {
-            FileReportRequestResponse::Data(data) => Ok(data),
-            FileReportRequestResponse::Error(error) => Err(error),
+            ReportRequestResponse::Data(data) => Ok(data),
+            ReportRequestResponse::Error(error) => Err(error),
         }
     }
 
@@ -581,11 +581,11 @@ impl VirusTotalClient {
     ) -> Result<DomainReportData, VirusTotalError> {
         let body = self.get_domain_report_raw(domain).await?;
         let json_response = String::from_utf8(body.to_ascii_lowercase())?;
-        let report: DomainReportRequestResponse = serde_json::from_str(&json_response)?;
+        let report: ReportRequestResponse<DomainReportData> = serde_json::from_str(&json_response)?;
 
         match report {
-            DomainReportRequestResponse::Data(data) => Ok(data),
-            DomainReportRequestResponse::Error(error) => Err(error),
+            ReportRequestResponse::Data(data) => Ok(data),
+            ReportRequestResponse::Error(error) => Err(error),
         }
     }
 
@@ -690,6 +690,16 @@ mod test {
                 }
                 Err(e) => {
                     assert_eq!(e, *errors::FORBIDDEN_ERROR);
+                }
+            }
+
+            let response = client.get_domain_report("haiku-os.org").await;
+            match response {
+                Ok(report) => {
+                    assert!(report.attributes.extra.is_empty());
+                }
+                Err(e) => {
+                    panic!("Domain report error: {e}");
                 }
             }
         } else {

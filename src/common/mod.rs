@@ -1,6 +1,21 @@
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::VirusTotalError;
+
 use serde::{Deserialize, Serialize};
+
+/// Report response, which could return data (success confirmation) or an error message
+#[allow(clippy::large_enum_variant)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub enum ReportRequestResponse<R> {
+    /// Information about the report request
+    #[serde(rename = "data")]
+    Data(R),
+
+    /// Error message, report request not successful
+    #[serde(rename = "error")]
+    Error(VirusTotalError),
+}
 
 /// Result per each anti-virus product
 #[derive(Clone, Debug, Serialize, Deserialize)]
