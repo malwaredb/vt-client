@@ -167,24 +167,9 @@ impl VirusTotalClient {
     /// Get the unparsed file report from VirusTotal for an MD5, SHA-1, or SHA-256 hash, which is assumed to be valid.
     #[inline]
     pub async fn get_file_report_raw(&self, file_hash: &str) -> Result<Bytes, VirusTotalError> {
-        self.client()?
-            .get(format!(
-                "https://www.virustotal.com/api/v3/files/{file_hash}"
-            ))
-            .send()
+        self.other(&format!("files/{file_hash}"))
             .await
-            .map_err(|e| {
-                #[cfg(feature = "tracing")]
-                tracing::error!("Error getting VirusTotal report: {e}");
-                e
-            })?
-            .bytes()
-            .await
-            .map_err(|e| {
-                #[cfg(feature = "tracing")]
-                tracing::error!("Error getting VirusTotal report: {e}");
-                e.into()
-            })
+            .map_err(|e| e.into())
     }
 
     /// Get a parsed file report from VirusTotal for an MD5, SHA-1, or SHA-256 hash, which is assumed to be valid.
@@ -539,26 +524,15 @@ impl VirusTotalClient {
         Ok(response)
     }
 
-    /// Get a VirusTotal report for a domain, returing the raw bytes
+    /// Get a VirusTotal report for a domain, returning the raw bytes
     #[inline]
     pub async fn get_domain_report_raw(&self, domain: &str) -> Result<Bytes, VirusTotalError> {
-        let client = self.client()?;
-        client
-            .get(format!(
-                "https://www.virustotal.com/api/v3/domains/{domain}",
-            ))
-            .send()
-            .await?
-            .bytes()
+        self.other(&format!("domains/{domain}"))
             .await
-            .map_err(|e| {
-                #[cfg(feature = "tracing")]
-                tracing::error!("Error requesting VirusTotal domain: {e}");
-                e.into()
-            })
+            .map_err(|e| e.into())
     }
 
-    /// Get a VirusTotal report for a domain, returing the raw bytes
+    /// Get a VirusTotal report for a domain, returning the parsed response
     pub async fn get_domain_report(
         &self,
         domain: &str,
@@ -596,7 +570,7 @@ impl VirusTotalClient {
             .await
     }
 
-    /// Request VirusTotal rescan a file for an MD5, SHA-1, or SHA-256 hash, and receive the unparsed response
+    /// Request VirusTotal rescan of a file or domain, internally used
     #[inline]
     async fn request_rescan_raw(
         &self,
