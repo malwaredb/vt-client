@@ -705,6 +705,7 @@ mod test {
             let response = client.get_domain_report("haiku-os.org").await;
             match response {
                 Ok(report) => {
+                    println!("{:?}", report.attributes.extra);
                     assert!(report.attributes.extra.is_empty());
                 }
                 Err(e) => {

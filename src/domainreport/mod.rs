@@ -144,6 +144,15 @@ pub struct DomainAttributes {
     #[serde(default)]
     pub categories: HashMap<String, serde_json::Value>,
 
+    /// When the domain expires
+    #[cfg(feature = "chrono")]
+    #[serde(with = "ts_seconds_option", default)]
+    pub expiration_date: Option<DateTime<Utc>>,
+
+    /// When the domain expires
+    #[cfg(not(feature = "chrono"))]
+    pub expiration_date: Option<u64>,
+
     /// Anything else not capture by this struct
     #[serde(flatten)]
     pub extra: HashMap<String, serde_json::Value>,
