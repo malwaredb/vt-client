@@ -863,7 +863,6 @@ dependencies = [
  "clap",
  "hex",
  "malwaredb-virustotal",
- "serde",
  "serde_json",
  "sha2",
  "tokio",

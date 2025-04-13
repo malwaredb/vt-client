@@ -12,7 +12,6 @@ version.workspace = true
 anyhow = { workspace = true, features = ["std"] }
 clap = { workspace = true, features = ["derive", "env", "help", "std", "usage"], default-features = false }
 hex = { workspace = true, features = ["alloc"], default-features = false }
-serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true, features = ["alloc"], default-features = false }
 sha2 = { workspace = true, default-features = false }
 malwaredb-virustotal = { workspace = true, features = ["chrono", "clap", "tokio"], default-features = false }
