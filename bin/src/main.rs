@@ -18,6 +18,7 @@ use sha2::{Digest, Sha256};
 #[command(author, about, version)]
 struct Args {
     /// API key for VirusTotal
+    #[arg(long, env = "VT_API_KEY")]
     pub client: VirusTotalClient,
 
     /// Action to be performed with VirusTotal
