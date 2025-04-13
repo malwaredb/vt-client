@@ -10,7 +10,7 @@ version.workspace = true
 
 [dependencies]
 anyhow = { workspace = true, features = ["std"] }
-clap = { workspace = true, features = ["derive", "env", "help", "std", "usage"], default-features = false }
+clap = { workspace = true, features = ["derive", "env", "help", "std", "suggestions", "usage"], default-features = false }
 hex = { workspace = true, features = ["alloc"], default-features = false }
 serde_json = { workspace = true, features = ["alloc"], default-features = false }
 sha2 = { workspace = true, default-features = false }

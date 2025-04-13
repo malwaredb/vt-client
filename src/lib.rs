@@ -16,6 +16,8 @@ pub mod errors;
 pub mod filereport;
 /// Logic for searching for files based on types, submission, and attributes
 pub mod filesearch;
+/// Logic for parsing the IP report data from VirusTotal
+pub mod ipreport;
 
 use crate::common::{ReportRequestResponse, RescanRequestData, RescanRequestType};
 use crate::domainreport::DomainReportData;
@@ -29,6 +31,7 @@ use std::path::Path;
 use std::str::FromStr;
 use std::string::FromUtf8Error;
 
+use crate::ipreport::IPReportData;
 use bytes::Bytes;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::multipart::{Form, Part};
@@ -598,6 +601,45 @@ impl VirusTotalClient {
             })
     }
 
+    /// Get a VirusTotal report for an IP address, returning the raw bytes
+    #[inline]
+    pub async fn get_ip_report_raw(&self, ip: &str) -> Result<Bytes, VirusTotalError> {
+        self.other(&format!("ip_addresses/{ip}"))
+            .await
+            .map_err(|e| e.into())
+    }
+
+    /// Get a VirusTotal report for an IP address, returning the parsed response
+    pub async fn get_ip_report(&self, ip: &str) -> Result<IPReportData, VirusTotalError> {
+        let body = self.get_ip_report_raw(ip).await?;
+        let json_response = String::from_utf8(body.to_ascii_lowercase())?;
+        let report: ReportRequestResponse<IPReportData> = serde_json::from_str(&json_response)?;
+
+        match report {
+            ReportRequestResponse::Data(data) => Ok(data),
+            ReportRequestResponse::Error(error) => Err(error),
+        }
+    }
+
+    /// Request rescan of an IP address and receive the unparsed response
+    #[inline]
+    pub async fn request_ip_rescan_raw(&self, ip: &str) -> Result<Bytes, VirusTotalError> {
+        self.request_rescan_raw(RescanRequestType::IP, ip).await
+    }
+
+    /// Request rescan of an IP address and receive parsed response
+    pub async fn request_ip_rescan(&self, ip: &str) -> Result<RescanRequestData, VirusTotalError> {
+        let body = self.request_ip_rescan_raw(ip).await?;
+        let json_response = String::from_utf8(body.to_ascii_lowercase())?;
+        let report: ReportRequestResponse<RescanRequestData> =
+            serde_json::from_str(&json_response)?;
+
+        match report {
+            ReportRequestResponse::Data(data) => Ok(data),
+            ReportRequestResponse::Error(error) => Err(error),
+        }
+    }
+
     /// Since this crate doesn't support every Virus Total feature, this function can receive a
     /// URL fragment and return the response.
     #[inline]
@@ -720,6 +762,19 @@ mod test {
                 }
                 Err(e) => {
                     panic!("Domain rescan error: {e}");
+                }
+            }
+
+            let response = client
+                .get_ip_report("23.53.35.49" /* phobos.apple.com */)
+                .await;
+            match response {
+                Ok(report) => {
+                    println!("{:?}", report.attributes.extra);
+                    assert!(report.attributes.extra.is_empty());
+                }
+                Err(e) => {
+                    panic!("IP address report error: {e}");
                 }
             }
         } else {

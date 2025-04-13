@@ -15,6 +15,9 @@ pub enum RescanRequestType {
 
     /// Request rescan of a file
     File,
+
+    /// Request rescan of an IP address
+    IP,
 }
 
 impl Display for RescanRequestType {
@@ -22,6 +25,7 @@ impl Display for RescanRequestType {
         match self {
             RescanRequestType::Domain => write!(f, "domains"),
             RescanRequestType::File => write!(f, "files"),
+            RescanRequestType::IP => write!(f, "ip_addresses"),
         }
     }
 }

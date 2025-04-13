@@ -2,7 +2,7 @@
 [![Test](https://github.com/malwaredb/vt-client/actions/workflows/test.yml/badge.svg)](https://github.com/malwaredb/vt-client/actions/workflows/test.yml)[![Lint](https://github.com/malwaredb/vt-client/actions/workflows/lint.yml/badge.svg)](https://github.com/malwaredb/vt-client/actions/workflows/lint.yml)[![Documentation](https://docs.rs/malwaredb-virustotal/badge.svg)](https://docs.rs/malwaredb-virustotal/)[![Crates.io Version](https://img.shields.io/crates/v/malwaredb-virustotal)](https://crates.io/crates/malwaredb-virustotal)[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/malwaredb/vt-client/badge)](https://securityscorecards.dev/viewer/?uri=github.com/malwaredb/vt-client)
 
 This is logic for interacting with [VirusTotal](https://www.virustotal.com)'s [V3 API](https://virustotal.readme.io/reference/overview). At present, only the following actions are supported:
-* Fetch file & domain reports: this gets the anti-virus scan data for a given sample, and there are examples in the `testdata/` directory.
+* Fetch file, IP address, and domain reports: this gets the anti-virus scan and other data for a given sample, and there are examples in the `testdata/` directory.
   * The goal is for the file report to have all the possible fields for increased ease of use.
 * Request file re-scan: ask VirusTotal to run a given sample through their collection of anti-virus applications and analysis tools.
 * Submit a file sample: send a sample to VirusTotal for analysis.
