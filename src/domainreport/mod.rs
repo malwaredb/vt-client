@@ -153,6 +153,10 @@ pub struct DomainAttributes {
     #[cfg(not(feature = "chrono"))]
     pub expiration_date: Option<u64>,
 
+    /// Registration Domain Access Protocol data, see [https://about.rdap.org]
+    #[serde(default)]
+    pub rdap: HashMap<String, serde_json::Value>,
+
     /// Anything else not capture by this struct
     #[serde(flatten)]
     pub extra: HashMap<String, serde_json::Value>,
