@@ -19,9 +19,10 @@ pub mod filesearch;
 /// Logic for parsing the IP report data from VirusTotal
 pub mod ipreport;
 
-use crate::common::{ReportRequestResponse, RescanRequestData, RescanRequestType};
-use crate::domainreport::DomainReportData;
-use crate::filereport::FileReportData;
+use crate::common::{
+    ReportRequestResponse, ReportResponseHeader, RescanRequestData, RescanRequestType,
+};
+use crate::filereport::ScanResultAttributes;
 use crate::filesearch::FileSearchResponse;
 
 use std::borrow::Cow;
@@ -31,7 +32,8 @@ use std::path::Path;
 use std::str::FromStr;
 use std::string::FromUtf8Error;
 
-use crate::ipreport::IPReportData;
+use crate::domainreport::DomainAttributes;
+use crate::ipreport::IPAttributes;
 use bytes::Bytes;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::multipart::{Form, Part};
@@ -179,10 +181,11 @@ impl VirusTotalClient {
     pub async fn get_file_report(
         &self,
         file_hash: &str,
-    ) -> Result<FileReportData, VirusTotalError> {
+    ) -> Result<ReportResponseHeader<ScanResultAttributes>, VirusTotalError> {
         let body = self.get_file_report_raw(file_hash).await?;
         let json_response = String::from_utf8(body.to_ascii_lowercase())?;
-        let report: ReportRequestResponse<FileReportData> = serde_json::from_str(&json_response)?;
+        let report: ReportRequestResponse<ReportResponseHeader<ScanResultAttributes>> =
+            serde_json::from_str(&json_response)?;
 
         match report {
             ReportRequestResponse::Data(data) => Ok(data),
@@ -539,10 +542,11 @@ impl VirusTotalClient {
     pub async fn get_domain_report(
         &self,
         domain: &str,
-    ) -> Result<DomainReportData, VirusTotalError> {
+    ) -> Result<ReportResponseHeader<DomainAttributes>, VirusTotalError> {
         let body = self.get_domain_report_raw(domain).await?;
         let json_response = String::from_utf8(body.to_ascii_lowercase())?;
-        let report: ReportRequestResponse<DomainReportData> = serde_json::from_str(&json_response)?;
+        let report: ReportRequestResponse<ReportResponseHeader<DomainAttributes>> =
+            serde_json::from_str(&json_response)?;
 
         match report {
             ReportRequestResponse::Data(data) => Ok(data),
@@ -610,10 +614,14 @@ impl VirusTotalClient {
     }
 
     /// Get a VirusTotal report for an IP address, returning the parsed response
-    pub async fn get_ip_report(&self, ip: &str) -> Result<IPReportData, VirusTotalError> {
+    pub async fn get_ip_report(
+        &self,
+        ip: &str,
+    ) -> Result<ReportResponseHeader<IPAttributes>, VirusTotalError> {
         let body = self.get_ip_report_raw(ip).await?;
         let json_response = String::from_utf8(body.to_ascii_lowercase())?;
-        let report: ReportRequestResponse<IPReportData> = serde_json::from_str(&json_response)?;
+        let report: ReportRequestResponse<ReportResponseHeader<IPAttributes>> =
+            serde_json::from_str(&json_response)?;
 
         match report {
             ReportRequestResponse::Data(data) => Ok(data),

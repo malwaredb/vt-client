@@ -10,24 +10,6 @@ use chrono::serde::{ts_seconds, ts_seconds_option};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-/// Successful domain report request response contents
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct DomainReportData {
-    /// Link to the Domain report
-    #[serde(default)]
-    pub links: HashMap<String, String>,
-
-    /// Report type, probably "domain"
-    #[serde(rename = "type")]
-    pub record_type: String,
-
-    /// Report ID, also the domain name
-    pub id: String,
-
-    /// The file report details, the interesting part
-    pub attributes: DomainAttributes,
-}
-
 /// All scan results
 /// [https://virustotal.readme.io/reference/files]
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -407,13 +389,13 @@ pub struct PopularityRankEntry {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::common::ReportRequestResponse;
+    use crate::common::{ReportRequestResponse, ReportResponseHeader};
 
     #[test]
     fn haiku_org() {
         const DOMAIN_REPORT: &str = include_str!("../../testdata/haikuorg.json");
 
-        let report: ReportRequestResponse<DomainReportData> =
+        let report: ReportRequestResponse<ReportResponseHeader<DomainAttributes>> =
             serde_json::from_str(DOMAIN_REPORT).expect("failed to deserialize VT report");
 
         let report = if let ReportRequestResponse::Data(data) = report {

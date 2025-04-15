@@ -18,24 +18,6 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// Successful file report request response contents
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct FileReportData {
-    /// The file report details, the interesting part
-    pub attributes: ScanResultAttributes,
-
-    /// Report type, probably "file"
-    #[serde(rename = "type")]
-    pub record_type: String,
-
-    /// Report ID, also the file's SHA-256 hash
-    pub id: String,
-
-    /// Link to the file report
-    #[serde(default)]
-    pub links: HashMap<String, String>,
-}
-
 /// All scan results
 /// [https://virustotal.readme.io/reference/files]
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -558,7 +540,7 @@ pub struct SigmaAnalysisResults {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::common::ReportRequestResponse;
+    use crate::common::{ReportRequestResponse, ReportResponseHeader};
     use rstest::rstest;
 
     #[rstest]
@@ -577,7 +559,7 @@ mod tests {
     #[case::elf(include_str!("../../testdata/de10ba5e5402b46ea975b5cb8a45eb7df9e81dc81012fd4efd145ed2dce3a740.json"), "ELF"
     )]
     fn deserialize_valid_report(#[case] report: &str, #[case] file_type: &str) {
-        let report: ReportRequestResponse<FileReportData> =
+        let report: ReportRequestResponse<ReportResponseHeader<ScanResultAttributes>> =
             serde_json::from_str(report).expect("failed to deserialize VT report");
 
         if let ReportRequestResponse::Data(data) = report {
@@ -605,7 +587,7 @@ mod tests {
     #[case(include_str!("../../testdata/not_found.json"))]
     #[case(include_str!("../../testdata/wrong_key.json"))]
     fn deserialize_errors(#[case] contents: &str) {
-        let report: ReportRequestResponse<FileReportData> =
+        let report: ReportRequestResponse<ReportResponseHeader<ScanResultAttributes>> =
             serde_json::from_str(contents).expect("failed to deserialize VT error response");
 
         match report {

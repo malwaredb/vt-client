@@ -7,6 +7,24 @@ use std::fmt::Display;
 
 use serde::{Deserialize, Serialize};
 
+/// The header for report requests of the various types
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ReportResponseHeader<A> {
+    /// Link to the Domain report
+    #[serde(default)]
+    pub links: HashMap<String, String>,
+
+    /// Report type, probably "domain"
+    #[serde(rename = "type")]
+    pub record_type: String,
+
+    /// Report ID, also the domain name
+    pub id: String,
+
+    /// The file report details, the interesting part
+    pub attributes: A,
+}
+
 /// Type of item for requesting a rescan or re-evaluation
 #[derive(Copy, Clone, Debug)]
 pub enum RescanRequestType {
