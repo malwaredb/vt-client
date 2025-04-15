@@ -5,9 +5,10 @@ use crate::common::{AnalysisResult, LastAnalysisStats, Votes};
 use std::collections::HashMap;
 
 #[cfg(feature = "chrono")]
-use chrono::serde::{ts_seconds, ts_seconds_option};
-#[cfg(feature = "chrono")]
-use chrono::{DateTime, Utc};
+use chrono::{
+    serde::{ts_seconds, ts_seconds_option},
+    DateTime, Utc,
+};
 use serde::{Deserialize, Serialize};
 
 /// All scan results
@@ -98,12 +99,12 @@ pub struct DomainAttributes {
     #[serde(default)]
     pub last_analysis_results: HashMap<String, AnalysisResult>,
 
-    /// When the file was last analyzed by VirusTotal
+    /// When the domain was last analyzed by VirusTotal
     #[cfg(feature = "chrono")]
     #[serde(with = "ts_seconds")]
     pub last_analysis_date: DateTime<Utc>,
 
-    /// When the file was last analyzed by VirusTotal
+    /// When the domain was last analyzed by VirusTotal
     #[cfg(not(feature = "chrono"))]
     pub last_analysis_date: u64,
 

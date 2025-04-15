@@ -14,36 +14,39 @@ pub struct ReportResponseHeader<A> {
     #[serde(default)]
     pub links: HashMap<String, String>,
 
-    /// Report type, probably "domain"
+    /// Report type
     #[serde(rename = "type")]
-    pub record_type: String,
+    pub record_type: RecordType,
 
     /// Report ID, also the domain name
     pub id: String,
 
-    /// The file report details, the interesting part
+    /// The report details, the interesting part
     pub attributes: A,
 }
 
-/// Type of item for requesting a rescan or re-evaluation
-#[derive(Copy, Clone, Debug)]
-pub enum RescanRequestType {
-    /// Request re-evaluation of a domain
+/// The type of report
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub enum RecordType {
+    /// Domain name report
+    #[serde(alias = "domain", alias = "domains")]
     Domain,
 
-    /// Request rescan of a file
-    File,
+    /// IP address report
+    #[serde(alias = "ip_address")]
+    IPAddress,
 
-    /// Request rescan of an IP address
-    IP,
+    /// File scan report
+    #[serde(alias = "files", alias = "file")]
+    File,
 }
 
-impl Display for RescanRequestType {
+impl Display for RecordType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            RescanRequestType::Domain => write!(f, "domains"),
-            RescanRequestType::File => write!(f, "files"),
-            RescanRequestType::IP => write!(f, "ip_addresses"),
+            RecordType::Domain => write!(f, "domains"),
+            RecordType::IPAddress => write!(f, "ip_addresses"),
+            RecordType::File => write!(f, "files"),
         }
     }
 }

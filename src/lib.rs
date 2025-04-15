@@ -19,11 +19,11 @@ pub mod filesearch;
 /// Logic for parsing the IP report data from VirusTotal
 pub mod ipreport;
 
-use crate::common::{
-    ReportRequestResponse, ReportResponseHeader, RescanRequestData, RescanRequestType,
-};
+use crate::common::{RecordType, ReportRequestResponse, ReportResponseHeader, RescanRequestData};
+use crate::domainreport::DomainAttributes;
 use crate::filereport::ScanResultAttributes;
 use crate::filesearch::FileSearchResponse;
+use crate::ipreport::IPAttributes;
 
 use std::borrow::Cow;
 use std::fmt::{Debug, Display, Formatter};
@@ -32,8 +32,6 @@ use std::path::Path;
 use std::str::FromStr;
 use std::string::FromUtf8Error;
 
-use crate::domainreport::DomainAttributes;
-use crate::ipreport::IPAttributes;
 use bytes::Bytes;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::multipart::{Form, Part};
@@ -196,8 +194,7 @@ impl VirusTotalClient {
     /// Request VirusTotal rescan a file for an MD5, SHA-1, or SHA-256 hash, and receive the unparsed response
     #[inline]
     pub async fn request_file_rescan_raw(&self, file_hash: &str) -> Result<Bytes, VirusTotalError> {
-        self.request_rescan_raw(RescanRequestType::File, file_hash)
-            .await
+        self.request_rescan_raw(RecordType::File, file_hash).await
     }
 
     /// Request VirusTotal rescan a file for an MD5, SHA-1, or SHA-256 hash, which is assumed to be valid.
@@ -573,15 +570,14 @@ impl VirusTotalClient {
     /// Request rescan of a domain and receive the unparsed response
     #[inline]
     pub async fn request_domain_rescan_raw(&self, domain: &str) -> Result<Bytes, VirusTotalError> {
-        self.request_rescan_raw(RescanRequestType::Domain, domain)
-            .await
+        self.request_rescan_raw(RecordType::Domain, domain).await
     }
 
     /// Request VirusTotal rescan of a file or domain, internally used
     #[inline]
     async fn request_rescan_raw(
         &self,
-        rescan_type: RescanRequestType,
+        rescan_type: RecordType,
         identifier: &str,
     ) -> Result<Bytes, VirusTotalError> {
         self.client()?
@@ -632,7 +628,7 @@ impl VirusTotalClient {
     /// Request rescan of an IP address and receive the unparsed response
     #[inline]
     pub async fn request_ip_rescan_raw(&self, ip: &str) -> Result<Bytes, VirusTotalError> {
-        self.request_rescan_raw(RescanRequestType::IP, ip).await
+        self.request_rescan_raw(RecordType::IPAddress, ip).await
     }
 
     /// Request rescan of an IP address and receive parsed response

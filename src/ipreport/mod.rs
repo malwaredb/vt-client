@@ -29,12 +29,12 @@ pub struct IPAttributes {
     /// IP Address' JARM hash [https://engineering.salesforce.com/easily-identify-malicious-servers-on-the-internet-with-jarm-e095edac525a]
     pub jarm: Option<String>,
 
-    /// When the file was last analyzed by VirusTotal
+    /// When the IP address was last analyzed by VirusTotal
     #[cfg(feature = "chrono")]
     #[serde(with = "ts_seconds")]
     pub last_analysis_date: DateTime<Utc>,
 
-    /// When the file was last analyzed by VirusTotal
+    /// When the IP address was last analyzed by VirusTotal
     #[cfg(not(feature = "chrono"))]
     pub last_analysis_date: u64,
 

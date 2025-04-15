@@ -11,12 +11,14 @@ pub mod pe;
 
 use crate::common::{AnalysisResult, LastAnalysisStats, Votes};
 
-#[cfg(feature = "chrono")]
-use chrono::serde::{ts_seconds, ts_seconds_option};
-#[cfg(feature = "chrono")]
-use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+#[cfg(feature = "chrono")]
+use chrono::{
+    serde::{ts_seconds, ts_seconds_option},
+    DateTime, Utc,
+};
+use serde::{Deserialize, Serialize};
 
 /// All scan results
 /// [https://virustotal.readme.io/reference/files]
@@ -540,7 +542,7 @@ pub struct SigmaAnalysisResults {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::common::{ReportRequestResponse, ReportResponseHeader};
+    use crate::common::{RecordType, ReportRequestResponse, ReportResponseHeader};
     use rstest::rstest;
 
     #[rstest]
@@ -572,7 +574,7 @@ mod tests {
             }
             println!("{data:?}");
             assert_eq!(data.attributes.type_description, file_type);
-            assert_eq!(data.record_type, "file");
+            assert_eq!(data.record_type, RecordType::File);
             for (key, value) in &data.attributes.extra {
                 println!("KEY: {key}");
                 println!("VALUE: {value}\n\n");
