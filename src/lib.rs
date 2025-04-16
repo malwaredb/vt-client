@@ -21,16 +21,15 @@ pub mod ipreport;
 
 use crate::common::{RecordType, ReportRequestResponse, ReportResponseHeader, RescanRequestData};
 use crate::domainreport::DomainAttributes;
+use crate::errors::VirusTotalError;
 use crate::filereport::ScanResultAttributes;
 use crate::filesearch::FileSearchResponse;
 use crate::ipreport::IPAttributes;
 
 use std::borrow::Cow;
 use std::fmt::{Debug, Display, Formatter};
-use std::io::Error;
 use std::path::Path;
 use std::str::FromStr;
-use std::string::FromUtf8Error;
 
 use bytes::Bytes;
 use reqwest::header::{HeaderMap, HeaderValue};
@@ -39,72 +38,6 @@ use serde::{Deserialize, Serialize, Serializer};
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
 const THIRTY_TWO_MEGABYTES: u64 = 32 * 1024 * 1024;
-
-/// Capture the error from VirusTotal, plus parsing or networking errors along the way
-#[derive(Clone, Debug, Eq, Serialize, Deserialize)]
-pub struct VirusTotalError {
-    /// Message describing the error
-    pub message: String,
-
-    /// Short version of the error
-    pub code: String,
-}
-
-impl PartialEq for VirusTotalError {
-    fn eq(&self, other: &VirusTotalError) -> bool {
-        // Only check the code, since the VT error messages don't always match their documentation.
-        self.code.to_lowercase() == other.code.to_lowercase()
-    }
-}
-
-impl Display for VirusTotalError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.message)
-    }
-}
-
-impl std::error::Error for VirusTotalError {}
-
-impl From<reqwest::Error> for VirusTotalError {
-    fn from(err: reqwest::Error) -> Self {
-        let url = if let Some(url) = err.url() {
-            format!(" loading {url}")
-        } else {
-            "".into()
-        };
-        Self {
-            message: "Http error".into(),
-            code: format!("Error{url} {err}"),
-        }
-    }
-}
-
-impl From<serde_json::Error> for VirusTotalError {
-    fn from(err: serde_json::Error) -> Self {
-        Self {
-            message: "Json error".into(),
-            code: format!("Json error at line {}: {err}", err.line()),
-        }
-    }
-}
-
-impl From<FromUtf8Error> for VirusTotalError {
-    fn from(err: FromUtf8Error) -> Self {
-        Self {
-            message: "UTF-8 decoding error".into(),
-            code: err.to_string(),
-        }
-    }
-}
-
-impl From<Error> for VirusTotalError {
-    fn from(value: Error) -> Self {
-        Self {
-            message: "IO error".into(),
-            code: value.to_string(),
-        }
-    }
-}
 
 /// VirusTotal client object
 #[derive(Clone, Deserialize, Zeroize, ZeroizeOnDrop)]
@@ -149,7 +82,7 @@ impl VirusTotalClient {
 
     /// Generate a client which already knows to send the API key, and asks for gzip responses.
     #[inline]
-    fn client(&self) -> reqwest::Result<reqwest::Client> {
+    fn client(&self) -> Result<reqwest::Client, VirusTotalError> {
         let mut headers = HeaderMap::new();
         headers.insert(
             VirusTotalClient::API_KEY,
@@ -163,16 +96,14 @@ impl VirusTotalClient {
             .map_err(|e| {
                 #[cfg(feature = "tracing")]
                 tracing::error!("Error creating VirusTotal client: {e}");
-                e
+                e.into()
             })
     }
 
     /// Get the unparsed file report from VirusTotal for an MD5, SHA-1, or SHA-256 hash, which is assumed to be valid.
     #[inline]
     pub async fn get_file_report_raw(&self, file_hash: &str) -> Result<Bytes, VirusTotalError> {
-        self.other(&format!("files/{file_hash}"))
-            .await
-            .map_err(|e| e.into())
+        self.other(&format!("files/{file_hash}")).await
     }
 
     /// Get a parsed file report from VirusTotal for an MD5, SHA-1, or SHA-256 hash, which is assumed to be valid.
@@ -181,9 +112,10 @@ impl VirusTotalClient {
         file_hash: &str,
     ) -> Result<ReportResponseHeader<ScanResultAttributes>, VirusTotalError> {
         let body = self.get_file_report_raw(file_hash).await?;
-        let json_response = String::from_utf8(body.to_ascii_lowercase())?;
+        let json_response = String::from_utf8(body.to_ascii_lowercase())
+            .map_err(|_e| VirusTotalError::UTF8Error(body.to_vec()))?;
         let report: ReportRequestResponse<ReportResponseHeader<ScanResultAttributes>> =
-            serde_json::from_str(&json_response)?;
+            VirusTotalError::parse_json(&json_response)?;
 
         match report {
             ReportRequestResponse::Data(data) => Ok(data),
@@ -214,9 +146,10 @@ impl VirusTotalClient {
         file_hash: &str,
     ) -> Result<RescanRequestData, VirusTotalError> {
         let body = self.request_file_rescan_raw(file_hash).await?;
-        let json_response = String::from_utf8(body.to_ascii_lowercase())?;
+        let json_response = String::from_utf8(body.to_ascii_lowercase())
+            .map_err(|_e| VirusTotalError::UTF8Error(body.to_vec()))?;
         let report: ReportRequestResponse<RescanRequestData> =
-            serde_json::from_str(&json_response)?;
+            VirusTotalError::parse_json(&json_response)?;
 
         match report {
             ReportRequestResponse::Data(data) => Ok(data),
@@ -236,14 +169,14 @@ impl VirusTotalClient {
         let file = tokio::fs::File::open(&path).await.map_err(|e| {
             #[cfg(feature = "tracing")]
             tracing::error!("Error opening file for VirusTotal submission: {e}");
-            e
+            VirusTotalError::IOError(e.to_string())
         })?;
 
         #[cfg(not(feature = "tokio"))]
         let file = std::fs::File::open(&path).map_err(|e| {
             #[cfg(feature = "tracing")]
             tracing::error!("Error opening file for VirusTotal submission: {e}");
-            e
+            VirusTotalError::IOError(e.to_string())
         })?;
 
         #[cfg(feature = "tokio")]
@@ -253,7 +186,7 @@ impl VirusTotalClient {
             .map_err(|e| {
                 #[cfg(feature = "tracing")]
                 tracing::error!("Error getting file size: {e}");
-                e
+                VirusTotalError::IOError(e.to_string())
             })?
             .len();
 
@@ -263,7 +196,7 @@ impl VirusTotalClient {
             .map_err(|e| {
                 #[cfg(feature = "tracing")]
                 tracing::error!("Error getting file size: {e}");
-                e
+                VirusTotalError::IOError(e.to_string())
             })?
             .len();
 
@@ -273,7 +206,10 @@ impl VirusTotalClient {
             "https://www.virustotal.com/api/v3/files".to_string()
         };
 
-        let form = Form::new().file("file", path).await?;
+        let form = Form::new()
+            .file("file", path)
+            .await
+            .map_err(|e| VirusTotalError::IOError(e.to_string()))?;
 
         client
             .post(url)
@@ -301,9 +237,10 @@ impl VirusTotalClient {
         path: P,
     ) -> Result<RescanRequestData, VirusTotalError> {
         let body = self.submit_file_path_raw(path).await?;
-        let json_response = String::from_utf8(body.to_ascii_lowercase())?;
+        let json_response = String::from_utf8(body.to_ascii_lowercase())
+            .map_err(|_e| VirusTotalError::UTF8Error(body.to_vec()))?;
         let report: ReportRequestResponse<RescanRequestData> =
-            serde_json::from_str(&json_response)?;
+            VirusTotalError::parse_json(&json_response)?;
 
         match report {
             ReportRequestResponse::Data(data) => Ok(data),
@@ -362,9 +299,10 @@ impl VirusTotalClient {
         name: N,
     ) -> Result<RescanRequestData, VirusTotalError> {
         let body = self.submit_bytes_raw(data, name).await?;
-        let json_response = String::from_utf8(body.to_ascii_lowercase())?;
+        let json_response = String::from_utf8(body.to_ascii_lowercase())
+            .map_err(|_e| VirusTotalError::UTF8Error(body.to_vec()))?;
         let report: ReportRequestResponse<RescanRequestData> =
-            serde_json::from_str(&json_response)?;
+            VirusTotalError::parse_json(&json_response)?;
 
         match report {
             ReportRequestResponse::Data(data) => Ok(data),
@@ -376,12 +314,13 @@ impl VirusTotalClient {
     #[inline]
     pub async fn get_upload_url(&self) -> Result<String, VirusTotalError> {
         let response = self.other("files/upload_url").await?;
-        let response = String::from_utf8(response.to_vec())?;
-        let response = serde_json::from_str::<serde_json::Value>(&response)?;
-        let url = response["data"].as_str().ok_or(VirusTotalError {
-            message: "No URL returned".to_string(),
-            code: "NoURLReturned".to_string(),
-        })?;
+        let response = String::from_utf8(response.to_vec())
+            .map_err(|_e| VirusTotalError::UTF8Error(response.to_vec()))?;
+        let response = serde_json::from_str::<serde_json::Value>(&response)
+            .map_err(|_e| VirusTotalError::JsonError(response))?;
+        let url = response["data"]
+            .as_str()
+            .ok_or(VirusTotalError::NoURLReturned)?;
         Ok(url.to_string())
     }
 
@@ -407,19 +346,16 @@ impl VirusTotalClient {
 
         if !response.status().is_success() {
             let body = response.bytes().await?;
-            let json_response = String::from_utf8(body.to_ascii_lowercase())?;
+            let json_response = String::from_utf8(body.to_ascii_lowercase())
+                .map_err(|_e| VirusTotalError::UTF8Error(body.to_vec()))?;
 
-            // Just borrowing the `FileRescanResponseRequest` type gets it's error handling
             let error: ReportRequestResponse<RescanRequestData> =
-                serde_json::from_str(&json_response)?;
+                VirusTotalError::parse_json(&json_response)?;
             return if let ReportRequestResponse::Error(error) = error {
                 Err(error)
             } else {
                 // Should never happen, since we're only here if some error occurred.
-                Err(VirusTotalError {
-                    message: json_response,
-                    code: "VTError".into(),
-                })
+                Err(VirusTotalError::UnknownError)
             };
         }
 
@@ -479,8 +415,9 @@ impl VirusTotalClient {
         query: Q,
     ) -> Result<FileSearchResponse, VirusTotalError> {
         let body = self.search_raw(&query).await?;
-        let json_response = String::from_utf8(body.to_ascii_lowercase())?;
-        let response: FileSearchResponse = serde_json::from_str(&json_response)?;
+        let json_response = String::from_utf8(body.to_ascii_lowercase())
+            .map_err(|_e| VirusTotalError::UTF8Error(body.to_vec()))?;
+        let response: FileSearchResponse = VirusTotalError::parse_json(&json_response)?;
 
         let response = FileSearchResponse {
             response_code: response.response_code,
@@ -500,10 +437,7 @@ impl VirusTotalClient {
         prior: &FileSearchResponse,
     ) -> Result<FileSearchResponse, VirusTotalError> {
         if prior.offset.is_none() {
-            return Err(VirusTotalError {
-                message: "Cannot continue a search without an offset code".to_string(),
-                code: "NonPaginatedResults".to_string(),
-            });
+            return Err(VirusTotalError::NonPaginatedResults);
         }
 
         let url = format!(
@@ -514,8 +448,9 @@ impl VirusTotalClient {
         );
 
         let body = self.client()?.get(url).send().await?.bytes().await?;
-        let json_response = String::from_utf8(body.to_ascii_lowercase())?;
-        let response: FileSearchResponse = serde_json::from_str(&json_response)?;
+        let json_response = String::from_utf8(body.to_ascii_lowercase())
+            .map_err(|_e| VirusTotalError::UTF8Error(body.to_vec()))?;
+        let response: FileSearchResponse = VirusTotalError::parse_json(&json_response)?;
 
         let response = FileSearchResponse {
             response_code: response.response_code,
@@ -530,9 +465,7 @@ impl VirusTotalClient {
     /// Get a VirusTotal report for a domain, returning the raw bytes
     #[inline]
     pub async fn get_domain_report_raw(&self, domain: &str) -> Result<Bytes, VirusTotalError> {
-        self.other(&format!("domains/{domain}"))
-            .await
-            .map_err(|e| e.into())
+        self.other(&format!("domains/{domain}")).await
     }
 
     /// Get a VirusTotal report for a domain, returning the parsed response
@@ -541,9 +474,10 @@ impl VirusTotalClient {
         domain: &str,
     ) -> Result<ReportResponseHeader<DomainAttributes>, VirusTotalError> {
         let body = self.get_domain_report_raw(domain).await?;
-        let json_response = String::from_utf8(body.to_ascii_lowercase())?;
+        let json_response = String::from_utf8(body.to_ascii_lowercase())
+            .map_err(|_e| VirusTotalError::UTF8Error(body.to_vec()))?;
         let report: ReportRequestResponse<ReportResponseHeader<DomainAttributes>> =
-            serde_json::from_str(&json_response)?;
+            VirusTotalError::parse_json(&json_response)?;
 
         match report {
             ReportRequestResponse::Data(data) => Ok(data),
@@ -557,9 +491,10 @@ impl VirusTotalClient {
         domain: &str,
     ) -> Result<RescanRequestData, VirusTotalError> {
         let body = self.request_domain_rescan_raw(domain).await?;
-        let json_response = String::from_utf8(body.to_ascii_lowercase())?;
+        let json_response = String::from_utf8(body.to_ascii_lowercase())
+            .map_err(|_e| VirusTotalError::UTF8Error(body.to_vec()))?;
         let report: ReportRequestResponse<RescanRequestData> =
-            serde_json::from_str(&json_response)?;
+            VirusTotalError::parse_json(&json_response)?;
 
         match report {
             ReportRequestResponse::Data(data) => Ok(data),
@@ -604,9 +539,7 @@ impl VirusTotalClient {
     /// Get a VirusTotal report for an IP address, returning the raw bytes
     #[inline]
     pub async fn get_ip_report_raw(&self, ip: &str) -> Result<Bytes, VirusTotalError> {
-        self.other(&format!("ip_addresses/{ip}"))
-            .await
-            .map_err(|e| e.into())
+        self.other(&format!("ip_addresses/{ip}")).await
     }
 
     /// Get a VirusTotal report for an IP address, returning the parsed response
@@ -615,9 +548,10 @@ impl VirusTotalClient {
         ip: &str,
     ) -> Result<ReportResponseHeader<IPAttributes>, VirusTotalError> {
         let body = self.get_ip_report_raw(ip).await?;
-        let json_response = String::from_utf8(body.to_ascii_lowercase())?;
+        let json_response = String::from_utf8(body.to_ascii_lowercase())
+            .map_err(|_e| VirusTotalError::UTF8Error(body.to_vec()))?;
         let report: ReportRequestResponse<ReportResponseHeader<IPAttributes>> =
-            serde_json::from_str(&json_response)?;
+            VirusTotalError::parse_json(&json_response)?;
 
         match report {
             ReportRequestResponse::Data(data) => Ok(data),
@@ -634,9 +568,10 @@ impl VirusTotalClient {
     /// Request rescan of an IP address and receive parsed response
     pub async fn request_ip_rescan(&self, ip: &str) -> Result<RescanRequestData, VirusTotalError> {
         let body = self.request_ip_rescan_raw(ip).await?;
-        let json_response = String::from_utf8(body.to_ascii_lowercase())?;
+        let json_response = String::from_utf8(body.to_ascii_lowercase())
+            .map_err(|_e| VirusTotalError::UTF8Error(body.to_vec()))?;
         let report: ReportRequestResponse<RescanRequestData> =
-            serde_json::from_str(&json_response)?;
+            VirusTotalError::parse_json(&json_response)?;
 
         match report {
             ReportRequestResponse::Data(data) => Ok(data),
@@ -647,7 +582,7 @@ impl VirusTotalClient {
     /// Since this crate doesn't support every Virus Total feature, this function can receive a
     /// URL fragment and return the response.
     #[inline]
-    pub async fn other(&self, url: &str) -> reqwest::Result<Bytes> {
+    pub async fn other(&self, url: &str) -> Result<Bytes, VirusTotalError> {
         let client = self.client()?;
         client
             .get(format!("https://www.virustotal.com/api/v3/{url}"))
@@ -656,14 +591,14 @@ impl VirusTotalClient {
             .map_err(|e| {
                 #[cfg(feature = "tracing")]
                 tracing::error!("Error requesting VirusTotal other: {e}");
-                e
+                VirusTotalError::NetworkError(e.to_string())
             })?
             .bytes()
             .await
             .map_err(|e| {
                 #[cfg(feature = "tracing")]
                 tracing::error!("Error parsing VirusTotal other response: {e}");
-                e
+                VirusTotalError::NetworkError(e.to_string())
             })
     }
 }
@@ -725,7 +660,7 @@ mod test {
                     unreachable!("No way this should work");
                 }
                 Err(err) => {
-                    assert_eq!(err, *errors::NOT_FOUND_ERROR);
+                    assert_eq!(err, VirusTotalError::NotFoundError);
                 }
             }
 
@@ -744,7 +679,7 @@ mod test {
                     );
                 }
                 Err(e) => {
-                    assert_eq!(e, *errors::FORBIDDEN_ERROR);
+                    assert_eq!(e, VirusTotalError::ForbiddenError);
                 }
             }
 

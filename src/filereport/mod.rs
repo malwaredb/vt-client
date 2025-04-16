@@ -543,6 +543,7 @@ pub struct SigmaAnalysisResults {
 mod tests {
     use super::*;
     use crate::common::{RecordType, ReportRequestResponse, ReportResponseHeader};
+    use crate::errors::VirusTotalError;
     use rstest::rstest;
 
     #[rstest]
@@ -586,15 +587,17 @@ mod tests {
     }
 
     #[rstest]
-    #[case(include_str!("../../testdata/not_found.json"))]
-    #[case(include_str!("../../testdata/wrong_key.json"))]
-    fn deserialize_errors(#[case] contents: &str) {
-        let report: ReportRequestResponse<ReportResponseHeader<ScanResultAttributes>> =
-            serde_json::from_str(contents).expect("failed to deserialize VT error response");
+    #[case(include_str!("../../testdata/not_found.json"), VirusTotalError::NotFoundError)]
+    #[case(include_str!("../../testdata/wrong_key.json"), VirusTotalError::WrongCredentialsError)]
+    fn deserialize_errors(#[case] contents: &str, #[case] error: VirusTotalError) {
+        let report: Result<
+            ReportRequestResponse<ReportResponseHeader<ScanResultAttributes>>,
+            VirusTotalError,
+        > = VirusTotalError::parse_json(contents);
 
         match report {
-            ReportRequestResponse::Data(_) => panic!("Should have been an error type!"),
-            ReportRequestResponse::Error(_) => {}
+            Ok(_) => panic!("Should have been an error type!"),
+            Err(err) => assert_eq!(err, error),
         }
     }
 

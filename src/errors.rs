@@ -1,114 +1,183 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use super::VirusTotalError;
+use serde::{Deserialize, Serialize};
 
-use std::sync::LazyLock;
-
-// See: https://virustotal.readme.io/reference/errors
-
-/// The API request is invalid or malformed.
-pub static BAD_REQUEST_ERROR: LazyLock<VirusTotalError> = LazyLock::new(|| {
-    VirusTotalError {
-    code: "BadRequestError".into(),
-    message: "The API request is invalid or malformed. The message usually provides details about why the request is not valid.".into(),
+#[derive(Deserialize)]
+struct RawVTError {
+    error: InnerVTError,
 }
-});
 
-/// Some of the provided arguments are incorrect.
-pub static INVALID_ARGUMENT_ERROR: LazyLock<VirusTotalError> = LazyLock::new(|| VirusTotalError {
-    code: "InvalidArgumentError".into(),
-    message: "Some of the provided arguments are incorrect.".into(),
-});
+#[allow(dead_code)]
+#[derive(Deserialize)]
+struct InnerVTError {
+    code: VirusTotalError,
+    message: String,
+}
 
-/// The resource is not available yet, but will become available later.
-pub static NOT_AVAILABLE_YET: LazyLock<VirusTotalError> = LazyLock::new(|| VirusTotalError {
-    code: "NotAvailableYet".into(),
-    message: "The resource is not available yet, but will become available later.".into(),
-});
+/// VirusTotal client errors, possibly from VirusTotal, or also parsing VirusTotal responses
+/// See: [https://virustotal.readme.io/reference/errors]
+#[derive(Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
+pub enum VirusTotalError {
+    /// The API request is invalid or malformed.
+    #[serde(alias = "badrequesterror")]
+    BadRequestError,
 
-/// Content search query is not selective enough.
-pub static UNSELECTOVE_CONTENT_QUERY_ERROR: LazyLock<VirusTotalError> =
-    LazyLock::new(|| VirusTotalError {
-        code: "UnselectiveContentQueryError".into(),
-        message: "Content search query is not selective enough.".into(),
-    });
+    /// Some of the provided arguments are incorrect.
+    #[serde(alias = "invalidargumenterror")]
+    InvalidArgumentError,
 
-/// Unsupported content search query.
-pub static UNSUPPORTED_CONTENT_QUERY_ERROR: LazyLock<VirusTotalError> =
-    LazyLock::new(|| VirusTotalError {
-        code: "UnsupportedContentQueryError".into(),
-        message: "Unsupported content search query.".into(),
-    });
+    /// The resource is not available yet, but will become available later.
+    #[serde(alias = "notavailableyet")]
+    NotAvailableYet,
 
-/// The operation requires an authenticated user. Verify that you have provided your API key.
-pub static AUTHENTICATION_REQUIRED_ERROR: LazyLock<VirusTotalError> = LazyLock::new(|| {
-    VirusTotalError {
-        code: "AuthenticationRequiredError".into(),
-        message: "The operation requires an authenticated user. Verify that you have provided your API key.".into(),
+    /// Content search query is not selective enough.
+    #[serde(alias = "unselectivecontentqueryerror")]
+    UnselectiveContentQueryError,
+
+    /// Unsupported content search query.
+    #[serde(alias = "unsupportedcontentqueryerror")]
+    UnsupportedContentQueryError,
+
+    /// The operation requires an authenticated user. Verify that you have provided your API key.
+    #[serde(alias = "authenticationrequirederror")]
+    AuthenticationRequiredError,
+
+    /// The user account is not active. Make sure you properly activated your account by following the link sent to your email.
+    #[serde(alias = "usernotactiveerror")]
+    UserNotActiveError,
+
+    /// The provided API key is incorrect.
+    #[serde(alias = "wrongcredentialserror")]
+    WrongCredentialsError,
+
+    /// You are not allowed to perform the requested operation.
+    #[serde(alias = "forbiddenerror")]
+    ForbiddenError,
+
+    /// The requested resource was not found.
+    #[serde(alias = "notfounderror")]
+    NotFoundError,
+
+    /// The resource already exists.
+    #[serde(alias = "alreadyexistserror")]
+    AlreadyExistsError,
+
+    /// The request depended on another request and that request failed.
+    #[serde(alias = "faileddependencyerror")]
+    FailedDependencyError,
+
+    /// You have exceeded one of your quotas (minute, daily or monthly).
+    #[serde(alias = "quotaexceedederror")]
+    QuotaExceededError,
+
+    /// Too many requests.
+    #[serde(alias = "toomanyrequestserror")]
+    TooManyRequestsError,
+
+    /// Transient server error. Retry might work.
+    #[serde(alias = "transienterror")]
+    TransientError,
+
+    /// The operation took too long to complete.
+    #[serde(alias = "deadlineexceedederror")]
+    DeadlineExceededError,
+
+    /// If the custom upload endpoint URL request fails
+    NoURLReturned,
+
+    /// Json decoding error
+    JsonError(String),
+
+    /// String UTF-8 decoding error
+    UTF8Error(Vec<u8>),
+
+    /// Network error
+    NetworkError(String),
+
+    /// Error opening a file for submitting to VirusTotal
+    IOError(String),
+
+    /// A search query didn't have an offset
+    NonPaginatedResults,
+
+    /// Some other unknown or unforeseen error occurred
+    UnknownError,
+}
+
+impl VirusTotalError {
+    /// Parse the error from the VirusTotal response
+    pub(crate) fn parse_json<'a, T: Deserialize<'a>>(data: &'a str) -> Result<T, VirusTotalError> {
+        let result: serde_json::error::Result<T> = serde_json::from_str(data);
+        if let Ok(item) = result {
+            return Ok(item);
+        }
+
+        match serde_json::from_str::<RawVTError>(data) {
+            Ok(item) => Err(item.error.code),
+            Err(e) => Err(VirusTotalError::JsonError(e.to_string())),
+        }
     }
-});
 
-/// The user account is not active. Make sure you properly activated your account by following the link sent to your email.
-pub static USER_NOT_ACTIVE_ERROR: LazyLock<VirusTotalError> = LazyLock::new(|| {
-    VirusTotalError {
-code: "UserNotActiveError".into(),
-message: "The user account is not active. Make sure you properly activated your account by following the link sent to your email.".into(),
+    /// Get the long message from the error
+    pub fn message(&self) -> &'static str {
+        match self {
+            VirusTotalError::BadRequestError => "The API request is invalid or malformed.",
+            VirusTotalError::InvalidArgumentError => "Some of the provided arguments are incorrect.",
+            VirusTotalError::NotAvailableYet => "The resource is not available yet, but will become available later.",
+            VirusTotalError::UnselectiveContentQueryError => "Content search query is not selective enough.",
+            VirusTotalError::UnsupportedContentQueryError => "Unsupported content search query.",
+            VirusTotalError::AuthenticationRequiredError => "The operation requires an authenticated user. Verify that you have provided your API key.",
+            VirusTotalError::UserNotActiveError => "The user account is not active. Make sure you properly activated your account by following the link sent to your email.",
+            VirusTotalError::WrongCredentialsError => "The provided API key is incorrect.",
+            VirusTotalError::ForbiddenError => "You are not allowed to perform the requested operation.",
+            VirusTotalError::NotFoundError => "The requested resource was not found.",
+            VirusTotalError::AlreadyExistsError => "The resource already exists.",
+            VirusTotalError::FailedDependencyError => "The request depended on another request and that request failed.",
+            VirusTotalError::QuotaExceededError => "You have exceeded one of your quotas (minute, daily or monthly). Daily quotas are reset every day at 00:00 UTC. You may have run out of disk space and/or number of files on your VirusTotal Monitor account",
+            VirusTotalError::TooManyRequestsError => "Too many requests.",
+            VirusTotalError::TransientError => "Transient server error. Retry might work.",
+            VirusTotalError::DeadlineExceededError => "The operation took too long to complete.",
+            VirusTotalError::NoURLReturned => "If the custom upload endpoint URL request fails",
+            VirusTotalError::JsonError(_) => "Json decoding error",
+            VirusTotalError::UTF8Error(_) => "String UTF-8 decoding error",
+            VirusTotalError::NetworkError(_) => "Network error",
+            VirusTotalError::IOError(_) => "Error opening a file for submitting to VirusTotal",
+            VirusTotalError::NonPaginatedResults => "A search query didn't have an offset",
+            VirusTotalError::UnknownError => "Some other unknown or unforeseen error occurred",
+        }
+    }
 }
-});
 
-/// The provided API key is incorrect.
-pub static WRONG_CREDENTIALS_ERROR: LazyLock<VirusTotalError> = LazyLock::new(|| VirusTotalError {
-    code: "WrongCredentialsError".into(),
-    message: "The provided API key is incorrect.".into(),
-});
-
-/// You are not allowed to perform the requested operation.
-pub static FORBIDDEN_ERROR: LazyLock<VirusTotalError> = LazyLock::new(|| VirusTotalError {
-    code: "ForbiddenError".into(),
-    message: "You are not allowed to perform the requested operation.".into(),
-});
-
-/// The requested resource was not found.
-pub static NOT_FOUND_ERROR: LazyLock<VirusTotalError> = LazyLock::new(|| VirusTotalError {
-    code: "NotFoundError".into(),
-    message: "The requested resource was not found.".into(),
-});
-
-/// The resource already exists.
-pub static ALREADY_EXISTS_ERROR: LazyLock<VirusTotalError> = LazyLock::new(|| VirusTotalError {
-    code: "AlreadyExistsError".into(),
-    message: "The resource already exists.".into(),
-});
-
-/// The request depended on another request and that request failed.
-pub static FAILED_DEPENDENCY_ERROR: LazyLock<VirusTotalError> = LazyLock::new(|| VirusTotalError {
-    code: "FailedDependencyError".into(),
-    message: "The request depended on another request and that request failed.".into(),
-});
-
-/// You have exceeded one of your quotas (minute, daily or monthly).
-pub static QUOTA_EXCEEDED_ERROR: LazyLock<VirusTotalError> = LazyLock::new(|| {
-    VirusTotalError {
-code: "QuotaExceededError".into(),
-message: "You have exceeded one of your quotas (minute, daily or monthly). Daily quotas are reset every day at 00:00 UTC.
-You may have run out of disk space and/or number of files on your VirusTotal Monitor account.".into(),
+impl std::fmt::Display for VirusTotalError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.message())
+    }
 }
-});
 
-/// Too many requests.
-pub static TOO_MANY_REQUESTS_ERROR: LazyLock<VirusTotalError> = LazyLock::new(|| VirusTotalError {
-    code: "TooManyRequestsError".into(),
-    message: "Too many requests.".into(),
-});
+impl From<reqwest::Error> for VirusTotalError {
+    fn from(err: reqwest::Error) -> Self {
+        let url = if let Some(url) = err.url() {
+            format!(" loading {url}")
+        } else {
+            "".into()
+        };
+        VirusTotalError::NetworkError(format!("Http error for{url}: {err}"))
+    }
+}
 
-/// Transient server error. Retry might work.
-pub static TRANSIENT_ERROR: LazyLock<VirusTotalError> = LazyLock::new(|| VirusTotalError {
-    code: "TransientError".into(),
-    message: "Transient server error. Retry might work.".into(),
-});
+impl From<reqwest::StatusCode> for VirusTotalError {
+    fn from(status: reqwest::StatusCode) -> Self {
+        match status {
+            reqwest::StatusCode::BAD_REQUEST => VirusTotalError::BadRequestError,
+            reqwest::StatusCode::UNAUTHORIZED => VirusTotalError::AuthenticationRequiredError,
+            reqwest::StatusCode::FORBIDDEN => VirusTotalError::ForbiddenError,
+            reqwest::StatusCode::NOT_FOUND => VirusTotalError::NotFoundError,
+            reqwest::StatusCode::CONFLICT => VirusTotalError::AlreadyExistsError,
+            reqwest::StatusCode::TOO_MANY_REQUESTS => VirusTotalError::TooManyRequestsError,
+            reqwest::StatusCode::INTERNAL_SERVER_ERROR => VirusTotalError::TransientError,
+            _ => VirusTotalError::UnknownError,
+        }
+    }
+}
 
-/// The operation took too long to complete.
-pub static DEADLINE_EXCEEDED_ERROR: LazyLock<VirusTotalError> = LazyLock::new(|| VirusTotalError {
-    code: "DeadlineExceededError".into(),
-    message: "The operation took too long to complete.".into(),
-});
+impl std::error::Error for VirusTotalError {}
