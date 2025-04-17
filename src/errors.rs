@@ -105,7 +105,8 @@ pub enum VirusTotalError {
 }
 
 impl VirusTotalError {
-    /// Parse the error from the VirusTotal response
+    /// Attempt to parse the desired response from VirusTotal, or parse the error instead
+    #[inline]
     pub(crate) fn parse_json<'a, T: Deserialize<'a>>(data: &'a str) -> Result<T, VirusTotalError> {
         let result: serde_json::error::Result<T> = serde_json::from_str(data);
         if let Ok(item) = result {
@@ -113,7 +114,11 @@ impl VirusTotalError {
         }
 
         match serde_json::from_str::<RawVTError>(data) {
+            // If the error is a VirusTotal error
             Ok(item) => Err(item.error.code),
+
+            // If the error was a failure to parse the VirusTotal report, return the string representation
+            // This could be a malformed VirusTotal report or a malformed, or unknown error message.
             Err(e) => Err(VirusTotalError::JsonError(e.to_string())),
         }
     }
