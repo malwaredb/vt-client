@@ -11,7 +11,7 @@ use chrono::{
 };
 use serde::{Deserialize, Serialize};
 
-/// All data report for an IP address
+/// Report for an IP address
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct IPAttributes {
     /// Owner of the Autonomous System (AS)
@@ -26,27 +26,27 @@ pub struct IPAttributes {
     /// Country where the IP might be located
     pub country: Option<String>,
 
-    /// IP Address' JARM hash [https://engineering.salesforce.com/easily-identify-malicious-servers-on-the-internet-with-jarm-e095edac525a]
+    /// IP Address' [JARM hash](https://engineering.salesforce.com/easily-identify-malicious-servers-on-the-internet-with-jarm-e095edac525a)
     pub jarm: Option<String>,
 
-    /// When the IP address was last analyzed by VirusTotal
+    /// When the IP address was last analyzed by Virus Total
     #[cfg(feature = "chrono")]
     #[serde(with = "ts_seconds")]
     pub last_analysis_date: DateTime<Utc>,
 
-    /// When the IP address was last analyzed by VirusTotal
+    /// When the IP address was last analyzed by Virus Total
     #[cfg(not(feature = "chrono"))]
     pub last_analysis_date: u64,
 
     /// Antivirus results, where the key is the name of the antivirus software product
-    /// More info: [https://docs.virustotal.com/reference/analyses-object]
+    /// More info: <https://docs.virustotal.com/reference/analyses-object>
     #[serde(default)]
     pub last_analysis_results: HashMap<String, AnalysisResult>,
 
     /// Antivirus results summary
     pub last_analysis_stats: LastAnalysisStats,
 
-    /// SSL information for the https domain
+    /// SSL information for the https certificate
     #[serde(default)]
     pub last_https_certificate: HashMap<String, serde_json::Value>,
 
@@ -90,14 +90,14 @@ pub struct IPAttributes {
     /// VT's reputation of the IP
     pub reputation: u64,
 
-    /// Votes from the VirusTotal user community whether the IP address is dangerous
+    /// Votes from the Virus Total user community whether the IP address is dangerous
     pub total_votes: Votes,
 
     /// Tags
     #[serde(default)]
     pub tags: Vec<String>,
 
-    /// Anything else not capture by this struct
+    /// Anything else not captured by this struct
     #[serde(flatten)]
     pub extra: HashMap<String, serde_json::Value>,
 }

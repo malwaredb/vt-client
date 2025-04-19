@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// Parsed formation for Mach-O binaries
-/// [https://virustotal.readme.io/reference/macho_info]
-/// [https://en.wikipedia.org/wiki/Mach-O]
+/// <https://virustotal.readme.io/reference/macho_info>
+/// <https://en.wikipedia.org/wiki/Mach-O>
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct MachoInfo {
     /// Header of the Mach-O file

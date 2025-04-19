@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Parsed information for ELF binaries
-/// [https://en.wikipedia.org/wiki/Executable_and_Linkable_Format]
+/// <https://en.wikipedia.org/wiki/Executable_and_Linkable_Format>
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ElfInfo {
     /// Shared libraries used
@@ -55,7 +55,7 @@ pub struct ElfSection {
 }
 
 /// ELF header
-/// [https://virustotal.readme.io/reference/elf_info]
+/// <https://virustotal.readme.io/reference/elf_info>
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ElfHeader {
     /// ELF version, should be 1
@@ -77,7 +77,7 @@ pub struct ElfHeader {
     /// Number of sections
     pub num_section_headers: u64,
 
-    /// SystemV, FreeBSD, OpenBSD, etc
+    /// System V, FreeBSD, OpenBSD, etc
     pub os_abi: String,
 
     /// ABI version, ignored for static files

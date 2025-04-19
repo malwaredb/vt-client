@@ -20,8 +20,8 @@ use chrono::{
 };
 use serde::{Deserialize, Serialize};
 
-/// All scan results
-/// [https://virustotal.readme.io/reference/files]
+/// Report for a file
+/// <https://virustotal.readme.io/reference/files>
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ScanResultAttributes {
     /// When the file was created, often spoofed by malware
@@ -34,27 +34,27 @@ pub struct ScanResultAttributes {
     pub creation_date: Option<u64>,
 
     /// List of tags related to the file's capabilities
-    /// Requires VirusTotal Premium
+    /// Requires Virus Total Premium
     #[serde(default)]
     pub capabilities_tags: Vec<String>,
 
     /// Extracted malware configuration
-    /// Requires VirusTotal Premium
+    /// Requires Virus Total Premium
     #[serde(default)]
     pub malware_config: Option<HashMap<String, String>>,
 
     /// A description of the file type
     pub type_description: String,
 
-    /// Exiftool results, requires VirusTotal Premium
+    /// Exiftool results, requires Virus Total Premium
     #[serde(default)]
     pub exiftool: Option<ExifTool>,
 
-    /// Trend Micro's Locality Sensitive Hash: [https://tlsh.org/]
+    /// Trend Micro's Locality Sensitive Hash: <https://tlsh.org/>
     #[serde(default)]
     pub tlsh: Option<String>,
 
-    /// VirusTotal's custom algorithm for clustering similar files
+    /// Virus Total's custom algorithm for clustering similar files
     #[serde(default)]
     pub vhash: Option<String>,
 
@@ -70,7 +70,7 @@ pub struct ScanResultAttributes {
     #[serde(default)]
     pub tags: Vec<String>,
 
-    /// File names this sample has had when submitted to VirusTotal
+    /// File names this sample has had when submitted to Virus Total
     #[serde(default)]
     pub names: Vec<String>,
 
@@ -92,22 +92,22 @@ pub struct ScanResultAttributes {
     #[cfg(not(feature = "chrono"))]
     pub first_seen_itw_date: Option<u64>,
 
-    /// Type tags which can be used with VirusTotal Intelligence
+    /// Type tags which can be used with Virus Total Intelligence
     pub type_tag: String,
 
-    /// The number of times the file has been submitted to VirusTotal
+    /// The number of times the file has been submitted to Virus Total
     pub times_submitted: u32,
 
-    /// Votes from the VirusTotal user community whether the file is dangerous
+    /// Votes from the Virus Total user community whether the file is dangerous
     pub total_votes: Votes,
 
     /// Size of the file, in bytes
     pub size: u64,
 
-    /// Community votes as to the nature of the thread of this file
+    /// Community votes as to the nature of the threat of this file
     pub popular_threat_classification: Option<PopularThreatClassification>,
 
-    /// When the file was last submitted to VirusTotal
+    /// When the file was last submitted to Virus Total
     #[cfg(feature = "chrono")]
     #[serde(with = "ts_seconds")]
     pub last_submission_date: DateTime<Utc>,
@@ -117,12 +117,12 @@ pub struct ScanResultAttributes {
     pub last_submission_date: u64,
 
     /// Antivirus results, where the key is the name of the antivirus software product
-    /// More info: [https://docs.virustotal.com/reference/analyses-object]
+    /// More info: <https://docs.virustotal.com/reference/analyses-object>
     #[serde(default)]
     pub last_analysis_results: HashMap<String, AnalysisResult>,
 
-    /// Results from TrID, an attempt to identify the file type
-    /// See [https://mark0.net/soft-trid-e.html]
+    /// Results from `TrID`, an attempt to identify the file type
+    /// See <https://mark0.net/soft-trid-e.html>
     #[serde(default)]
     pub trid: Vec<TrID>,
 
@@ -137,7 +137,7 @@ pub struct ScanResultAttributes {
     #[serde(default)]
     pub type_extension: Option<String>,
 
-    /// When the file was last analyzed by VirusTotal
+    /// When the file was last analyzed by Virus Total
     #[cfg(feature = "chrono")]
     #[serde(with = "ts_seconds")]
     pub last_analysis_date: DateTime<Utc>,
@@ -149,7 +149,7 @@ pub struct ScanResultAttributes {
     /// The number of unique sources which have submitted this file
     pub unique_sources: u32,
 
-    /// When the file was first submitted to VirusTotal
+    /// When the file was first submitted to Virus Total
     #[cfg(feature = "chrono")]
     #[serde(with = "ts_seconds")]
     pub first_submission_date: DateTime<Utc>,
@@ -161,8 +161,8 @@ pub struct ScanResultAttributes {
     /// MD-5 hash of the file
     pub md5: String,
 
-    /// SSDeep fuzzy hash of the file
-    /// See [https://ssdeep-project.github.io/ssdeep/index.html]
+    /// `SSDeep` fuzzy hash of the file
+    /// See <https://ssdeep-project.github.io/ssdeep/index.html>
     pub ssdeep: String,
 
     /// SHA-1 of the file
@@ -175,19 +175,19 @@ pub struct ScanResultAttributes {
     pub last_analysis_stats: LastAnalysisStats,
 
     /// Dictionary containing the number of matched Sigma rules group by its severity
-    /// [https://blog.virustotal.com/2021/05/context-is-king-part-i-crowdsourced.html]
-    /// [https://virustotal.readme.io/docs/crowdsourced-sigma-rules]
+    /// <https://blog.virustotal.com/2021/05/context-is-king-part-i-crowdsourced.html>
+    /// <https://virustotal.readme.io/docs/crowdsourced-sigma-rules>
     #[serde(default)]
     pub sigma_analysis_summary: HashMap<String, serde_json::Value>,
 
     /// Sigma results, if available
-    /// [https://blog.virustotal.com/2021/05/context-is-king-part-i-crowdsourced.html]
-    /// [https://virustotal.readme.io/docs/crowdsourced-sigma-rules]
+    /// <https://blog.virustotal.com/2021/05/context-is-king-part-i-crowdsourced.html>
+    /// <https://virustotal.readme.io/docs/crowdsourced-sigma-rules>
     #[serde(default)]
     pub sigma_analysis_stats: Option<SigmaAnalysisStats>,
 
     /// Results from VT's Sigma rules
-    /// See [https://github.com/SigmaHQ/sigma/wiki/Rule-Creation-Guide]
+    /// See <https://github.com/SigmaHQ/sigma/wiki/Rule-Creation-Guide>
     #[serde(default)]
     pub sigma_analysis_results: Vec<SigmaAnalysisResults>,
 
@@ -199,11 +199,11 @@ pub struct ScanResultAttributes {
     pub meaningful_name: Option<String>,
 
     /// The file's reputation from all votes, negative means malicious;
-    /// see [https://support.virustotal.com/hc/en-us/articles/115002146769-Vote-comment]
+    /// see <https://support.virustotal.com/hc/en-us/articles/115002146769-Vote-comment>
     pub reputation: i32,
 
     /// Mach-O details, if a Mach-O file (macOS, iOS, etc)
-    /// This is a vector since there is a separate [macho::MachInfo] struct per
+    /// This is a vector since there is a separate [`macho::MachInfo`] struct per
     /// each architecture if this is a Fat Mach-O file.
     #[serde(default)]
     pub macho_info: Option<Vec<macho::MachoInfo>>,
@@ -212,11 +212,11 @@ pub struct ScanResultAttributes {
     #[serde(default)]
     pub pe_info: Option<pe::PEInfo>,
 
-    /// PE32: DotNet Assembly Information
+    /// PE32: Dot Net Assembly Information
     #[serde(default)]
     pub dot_net_assembly: Option<pe::dotnet::DotNetAssembly>,
 
-    /// PE32: SHA-256 hash used my Microsoft's AppLocker to ensure the binary is unmodified
+    /// PE32: SHA-256 hash used my Microsoft's App Locker to ensure the binary is unmodified
     #[serde(default)]
     pub authentihash: Option<String>,
 
@@ -238,7 +238,7 @@ pub struct ScanResultAttributes {
 }
 
 /// Popular threat classification contains threat information pulled from antivirus results
-/// [https://virustotal.readme.io/reference/popular_threat_classification]
+/// <https://virustotal.readme.io/reference/popular_threat_classification>
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PopularThreatClassification {
     /// Popular threat category and name
@@ -263,7 +263,7 @@ pub struct PopularThreatClassificationInner {
     pub value: String,
 }
 
-/// ExifTool metadata, requires VirusTotal Premium. See [https://docs.virustotal.com/reference/exiftool]
+/// `ExifTool` metadata, requires Virus Total Premium. See <https://docs.virustotal.com/reference/exiftool>
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub struct ExifTool {
@@ -422,9 +422,9 @@ pub struct ExifTool {
     pub extra: HashMap<String, serde_json::Value>,
 }
 
-/// File type based on TrID
-/// [https://virustotal.readme.io/reference/files-object-trid]
-/// [https://mark0.net/soft-trid-e.html]
+/// File type based on `TrID`
+/// <https://virustotal.readme.io/reference/files-object-trid>
+/// <https://mark0.net/soft-trid-e.html>
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct TrID {
     /// Detected file type
@@ -434,7 +434,7 @@ pub struct TrID {
     pub probability: f32,
 }
 
-/// Output from Detect It Easy [https://github.com/horsicq/Detect-It-Easy]
+/// Output from [Detect It Easy](https://github.com/horsicq/Detect-It-Easy)
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DetectItEasy {
     /// File type
@@ -445,9 +445,8 @@ pub struct DetectItEasy {
     pub values: Vec<DetectItEasyValues>,
 }
 
-/// File type from Detect It Easy
-/// [https://virustotal.readme.io/reference/detectiteasy]
-/// [https://github.com/horsicq/Detect-It-Easy]
+/// File type from [Detect It Easy](https://github.com/horsicq/Detect-It-Easy)
+/// <https://virustotal.readme.io/reference/detectiteasy>
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DetectItEasyValues {
     /// Artifacts detected in the file
@@ -467,7 +466,7 @@ pub struct DetectItEasyValues {
     pub version: Option<String>,
 }
 
-/// Sandbox verdicts, see [https://virustotal.readme.io/reference/sandbox_verdicts]
+/// Sandbox verdicts, see <https://virustotal.readme.io/reference/sandbox_verdicts>
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SandboxVerdict {
     /// Sandbox verdict
@@ -485,7 +484,7 @@ pub struct SandboxVerdict {
     pub malware_classification: Vec<String>,
 }
 
-/// Sandbox verdicts, see [https://virustotal.readme.io/reference/sandbox_verdicts]
+/// Sandbox verdicts, see <https://virustotal.readme.io/reference/sandbox_verdicts>
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum SandboxVerdictCategory {
     /// Sample was suspicious
@@ -506,8 +505,8 @@ pub enum SandboxVerdictCategory {
 }
 
 /// Sigma analysis stats
-/// [https://virustotal.readme.io/reference/sigma_analysis_stats]
-/// [https://virustotal.readme.io/docs/crowdsourced-sigma-rules]
+/// <https://virustotal.readme.io/reference/sigma_analysis_stats>
+/// <https://virustotal.readme.io/docs/crowdsourced-sigma-rules>
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SigmaAnalysisStats {
     /// Number of matched low severity rules.
@@ -524,8 +523,8 @@ pub struct SigmaAnalysisStats {
 }
 
 /// Sigma analysis results
-/// [https://virustotal.readme.io/reference/sigma_analysis_results]
-/// [https://virustotal.readme.io/docs/crowdsourced-sigma-rules]
+/// <https://virustotal.readme.io/reference/sigma_analysis_results>
+/// <https://virustotal.readme.io/docs/crowdsourced-sigma-rules>
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SigmaAnalysisResults {
     /// Sigma rule title

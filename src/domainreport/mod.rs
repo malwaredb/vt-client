@@ -11,8 +11,8 @@ use chrono::{
 };
 use serde::{Deserialize, Serialize};
 
-/// All scan results
-/// [https://virustotal.readme.io/reference/files]
+/// Report for a domain
+/// <https://virustotal.readme.io/reference/domain-info>
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DomainAttributes {
     /// When the report was created
@@ -75,7 +75,7 @@ pub struct DomainAttributes {
     #[serde(default)]
     pub last_update_date: Option<u64>,
 
-    /// Domain's JARM hash [https://engineering.salesforce.com/easily-identify-malicious-servers-on-the-internet-with-jarm-e095edac525a]
+    /// Domain's [JARM hash](https://engineering.salesforce.com/easily-identify-malicious-servers-on-the-internet-with-jarm-e095edac525a)
     pub jarm: String,
 
     /// Top Level domain
@@ -88,23 +88,23 @@ pub struct DomainAttributes {
     #[serde(default)]
     pub last_dns_records: Vec<DnsRecord>,
 
-    /// Votes from the VirusTotal user community whether the domain is dangerous
+    /// Votes from the Virus Total user community whether the domain is dangerous
     pub total_votes: Votes,
 
     /// Antivirus results summary
     pub last_analysis_stats: LastAnalysisStats,
 
     /// Antivirus results, where the key is the name of the antivirus software product
-    /// More info: [https://docs.virustotal.com/reference/analyses-object]
+    /// More info: <https://docs.virustotal.com/reference/analyses-object>
     #[serde(default)]
     pub last_analysis_results: HashMap<String, AnalysisResult>,
 
-    /// When the domain was last analyzed by VirusTotal
+    /// When the domain was last analyzed by Virus Total
     #[cfg(feature = "chrono")]
     #[serde(with = "ts_seconds")]
     pub last_analysis_date: DateTime<Utc>,
 
-    /// When the domain was last analyzed by VirusTotal
+    /// When the domain was last analyzed by Virus Total
     #[cfg(not(feature = "chrono"))]
     pub last_analysis_date: u64,
 
@@ -123,7 +123,7 @@ pub struct DomainAttributes {
     #[serde(default)]
     pub last_https_certificate: HashMap<String, serde_json::Value>,
 
-    /// Mapping services & categories
+    /// Mapping services and categories
     #[serde(default)]
     pub categories: HashMap<String, serde_json::Value>,
 
@@ -136,7 +136,7 @@ pub struct DomainAttributes {
     #[cfg(not(feature = "chrono"))]
     pub expiration_date: Option<u64>,
 
-    /// Registration Domain Access Protocol data, see [https://about.rdap.org]
+    /// Registration Domain Access Protocol data, see <https://about.rdap.org>
     #[serde(default)]
     pub rdap: HashMap<String, serde_json::Value>,
 
@@ -266,7 +266,7 @@ pub enum DnsRecordType {
     #[serde(alias = "https")]
     HTTPS,
 
-    /// IPSec key
+    /// IP Sec key
     #[serde(alias = "ipseckey")]
     IPSECKEY,
 
@@ -302,7 +302,7 @@ pub enum DnsRecordType {
     #[serde(alias = "nsec3param")]
     NSEC3PARAM,
 
-    /// OpenPGP public key record
+    /// Open PGP public key record
     #[serde(alias = "openpgpkey")]
     OPENPGPKEY,
 
@@ -399,9 +399,7 @@ mod tests {
         let report: ReportRequestResponse<ReportResponseHeader<DomainAttributes>> =
             serde_json::from_str(DOMAIN_REPORT).expect("failed to deserialize VT report");
 
-        let report = if let ReportRequestResponse::Data(data) = report {
-            data
-        } else {
+        let ReportRequestResponse::Data(report) = report else {
             panic!("expected data");
         };
 

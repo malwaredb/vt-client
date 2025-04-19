@@ -11,7 +11,7 @@ use chrono::{DateTime, Days, Utc};
 use serde::{Deserialize, Serialize};
 
 /// File types available for searching
-/// See [https://docs.virustotal.com/docs/file-search-modifiers] for the complete list of flags.
+/// See <https://docs.virustotal.com/docs/file-search-modifiers> for the complete list of flags.
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
 pub enum FileType {
     /// Any executable
@@ -59,18 +59,18 @@ pub enum FileType {
     /// Debian package for Linux, typically Debian, Ubuntu, Mint, others
     Deb,
 
-    /// RPM paclage for Linux, typically Redhat, CentOS, others
+    /// RPM paclage for Linux, typically Redhat, Cent OS, others
     Rpm,
 
-    /// New Executable [https://en.wikipedia.org/wiki/New_Executable]
+    /// New Executable <https://en.wikipedia.org/wiki/New_Executable>
     /// This is an old format for Windows 1.0 - Windows 95/98, OS/2
     Ne,
 
-    /// New Executable [https://en.wikipedia.org/wiki/New_Executable], applications only
+    /// New Executable <https://en.wikipedia.org/wiki/New_Executable>, applications only
     /// This is an old format for Windows 1.0 - Windows 95/98, OS/2
     NeExe,
 
-    /// New Executable [https://en.wikipedia.org/wiki/New_Executable], shared library only
+    /// New Executable <https://en.wikipedia.org/wiki/New_Executable>, shared library only
     /// This is an old format for Windows 1.0 - Windows 95/98, OS/2
     NeDll,
 
@@ -107,13 +107,13 @@ pub enum FileType {
     /// PHP script
     Php,
 
-    /// PowerPoint, any type
+    /// Power Point, any type
     PowerPoint,
 
-    /// PowerPoint, older DOCFILE format
+    /// Power Point, older DOCFILE format
     Ppt,
 
-    /// PowerPoint, newer Zip & XML-based format
+    /// Power Point, newer Zip & XML-based format
     Pptx,
 
     /// Python script
@@ -226,7 +226,7 @@ impl Display for FileTypes {
         let combined = self
             .0
             .iter()
-            .map(|ft| ft.to_string())
+            .map(std::string::ToString::to_string)
             .collect::<Vec<String>>()
             .join(" OR ");
         write!(f, "{combined}")
@@ -234,7 +234,7 @@ impl Display for FileTypes {
 }
 
 /// File attributes, many are file-type specific. Be sure to not use a [Tag] which is not
-/// appropriate for the [FileType] being sought!
+/// appropriate for the [`FileType`] being sought!
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
 pub enum Tag {
     /// PE32 file which uses the .Net Framework (CLR)
@@ -310,7 +310,7 @@ impl Display for Tags {
         let combined = self
             .0
             .iter()
-            .map(|t| t.to_string())
+            .map(std::string::ToString::to_string)
             .collect::<Vec<String>>()
             .join(" ");
         write!(f, "{combined}")
@@ -326,12 +326,13 @@ pub struct Positives {
     /// Optional upper bound of amount of antivirus hits
     pub max: Option<u32>,
 
-    /// Exact, [Positives::min] won't have `+`
+    /// Exact number of AV hits, [`Positives::min`] won't have `+`
     pub exact: bool,
 }
 
 impl Positives {
     /// Specify some minimum amount of antivirus hits, but no maximum
+    #[must_use]
     pub const fn min(min: u32) -> Self {
         Positives {
             min,
@@ -341,6 +342,7 @@ impl Positives {
     }
 
     /// Specify a minimum and maximum antivirus hits
+    #[must_use]
     pub const fn min_max(min: u32, max: u32) -> Self {
         Positives {
             min,
@@ -350,7 +352,7 @@ impl Positives {
     }
 }
 
-/// No VirusTotal hits, but benign today doesn't mean benign tomorrow.
+/// No Virus Total hits, but benign today doesn't mean benign tomorrow.
 pub const BENIGN: Positives = Positives {
     min: 0,
     max: Some(0),
@@ -398,8 +400,8 @@ pub struct FirstSubmission {
     /// If true, then only find files submitted at the first date
     pub exact: bool,
 
-    /// For date vs datetime. Use only the specified formats [FirstSubmission::FORMAT_DATE] or
-    /// [FirstSubmission::FORMATE_DATE_TIME], otherwise there will likely be errors or empty results
+    /// For date vs datetime. Use only the specified formats [`FirstSubmission::FORMAT_DATE`] or
+    /// [`FirstSubmission::FORMATE_DATE_TIME`], otherwise there will likely be errors or empty results
     pub format: &'static str,
 }
 
@@ -411,6 +413,7 @@ impl FirstSubmission {
     pub const FORMAT_DATETIME: &'static str = "%Y-%m-%dT%H:%M:%S";
 
     /// Only submitted at a specific date
+    #[must_use]
     pub fn at_date(start: DateTime<Utc>) -> Self {
         Self {
             first: start,
@@ -421,6 +424,7 @@ impl FirstSubmission {
     }
 
     /// Only submitted at a specific date and time
+    #[must_use]
     pub fn at_datetime(start: DateTime<Utc>) -> Self {
         Self {
             first: start,
@@ -431,6 +435,7 @@ impl FirstSubmission {
     }
 
     /// First submitted on or after a specific date
+    #[must_use]
     pub fn from_date(start: DateTime<Utc>) -> Self {
         Self {
             first: start,
@@ -441,6 +446,7 @@ impl FirstSubmission {
     }
 
     /// First submitted on or after a specific date and time
+    #[must_use]
     pub fn from_datetime(start: DateTime<Utc>) -> Self {
         Self {
             first: start,
@@ -451,6 +457,7 @@ impl FirstSubmission {
     }
 
     /// Builder: Set the end date
+    #[must_use]
     pub fn until_date(self, end: DateTime<Utc>) -> Self {
         Self {
             first: self.first,
@@ -461,8 +468,9 @@ impl FirstSubmission {
     }
 
     /// Submitted on or after some [Days] ago
+    #[must_use]
     pub fn days(days: u32) -> Self {
-        let start = Utc::now() - Days::new(days as u64);
+        let start = Utc::now() - Days::new(u64::from(days));
         Self {
             first: start,
             second: None,

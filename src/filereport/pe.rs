@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// Fields and information unique to PE32 files
-/// [https://virustotal.readme.io/reference/pe_info]
+/// <https://virustotal.readme.io/reference/pe_info>
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PEInfo {
     /// Rich Header, which may reveal compiler information
@@ -35,7 +35,7 @@ pub struct PEInfo {
     pub machine_type: u32,
 
     /// Import hash
-    /// [https://www.mandiant.com/resources/blog/tracking-malware-import-hashing]
+    /// <https://www.mandiant.com/resources/blog/tracking-malware-import-hashing>
     pub imphash: Option<String>,
 
     /// Section information
@@ -91,9 +91,10 @@ pub struct PEImports {
 }
 
 /// PE data related for .Net (CLR) binaries
-/// [https://virustotal.readme.io/reference/dot_net_assembly]
+/// <https://virustotal.readme.io/reference/dot_net_assembly>
 pub mod dotnet {
-    use super::*;
+    use serde::{Deserialize, Serialize};
+    use std::collections::HashMap;
 
     /// .Net specific information for a PE32 file
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -113,7 +114,7 @@ pub mod dotnet {
         /// Relative Virtual Address of the strong name signature hash
         pub strongname_va: u32,
 
-        /// Simplified representation of tables_rows_map
+        /// Simplified representation of [`Self::tables_rows_map`]
         pub tables_rows_map_log: String,
 
         /// Other assemblies used by this sample
@@ -127,7 +128,7 @@ pub mod dotnet {
         /// Entry point of the program
         pub entry_point_token: u64,
 
-        /// Hex presentation of the tables_rows_map
+        /// Hex presentation of [`Self::tables_rows_map`]
         pub tables_rows_map: String,
 
         /// Human-readable version of assembly flags

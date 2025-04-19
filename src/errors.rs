@@ -14,8 +14,8 @@ struct InnerVTError {
     message: String,
 }
 
-/// VirusTotal client errors, possibly from VirusTotal, or also parsing VirusTotal responses
-/// See: [https://virustotal.readme.io/reference/errors]
+/// Possible client errors from Virus Total for response parsing
+/// See: <https://virustotal.readme.io/reference/errors>
 #[derive(Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
 pub enum VirusTotalError {
     /// The API request is invalid or malformed.
@@ -26,7 +26,7 @@ pub enum VirusTotalError {
     #[serde(alias = "invalidargumenterror")]
     InvalidArgumentError,
 
-    /// The resource is not available yet, but will become available later.
+    /// The resource is not available yet but will become available later.
     #[serde(alias = "notavailableyet")]
     NotAvailableYet,
 
@@ -62,7 +62,7 @@ pub enum VirusTotalError {
     #[serde(alias = "alreadyexistserror")]
     AlreadyExistsError,
 
-    /// The request depended on another request and that request failed.
+    /// The request depended on another request, and that request failed.
     #[serde(alias = "faileddependencyerror")]
     FailedDependencyError,
 
@@ -85,16 +85,16 @@ pub enum VirusTotalError {
     /// If the custom upload endpoint URL request fails
     NoURLReturned,
 
-    /// Json decoding error
+    /// Json decoding error holding the string for which parsing failed
     JsonError(String),
 
-    /// String UTF-8 decoding error
+    /// String UTF-8 decoding error holding the bytes for which parsing failed
     UTF8Error(Vec<u8>),
 
     /// Network error
     NetworkError(String),
 
-    /// Error opening a file for submitting to VirusTotal
+    /// Error opening a file for submitting to Virus Total
     IOError(String),
 
     /// A search query didn't have an offset
@@ -105,7 +105,7 @@ pub enum VirusTotalError {
 }
 
 impl VirusTotalError {
-    /// Attempt to parse the desired response from VirusTotal, or parse the error instead
+    /// Attempt to parse the desired response from Virus Total, or parse the error instead
     #[inline]
     pub(crate) fn parse_json<'a, T: Deserialize<'a>>(data: &'a str) -> Result<T, VirusTotalError> {
         let result: serde_json::error::Result<T> = serde_json::from_str(data);
@@ -124,6 +124,7 @@ impl VirusTotalError {
     }
 
     /// Get the long message from the error
+    #[must_use]
     pub fn message(&self) -> &'static str {
         match self {
             VirusTotalError::BadRequestError => "The API request is invalid or malformed.",
@@ -164,9 +165,9 @@ impl From<reqwest::Error> for VirusTotalError {
         let url = if let Some(url) = err.url() {
             format!(" loading {url}")
         } else {
-            "".into()
+            String::new()
         };
-        VirusTotalError::NetworkError(format!("Http error for{url}: {err}"))
+        VirusTotalError::NetworkError(format!("Http error{url}: {err}"))
     }
 }
 

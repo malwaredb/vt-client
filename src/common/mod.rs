@@ -110,21 +110,21 @@ pub struct LastAnalysisStats {
     #[serde(rename = "type-unsupported", default)]
     pub type_unsupported: Option<u32>,
 
-    /// Antivirus products which indicate the file is suspicious
+    /// Antivirus products which indicate this file is suspicious
     pub suspicious: u32,
 
     /// Antivirus products which timed out trying to evaluate the file
     #[serde(rename = "confirmed-timeout", default)]
     pub confirmed_timeout: Option<u32>,
 
-    /// Antivirus products which timed out trying to evaluate the file
+    /// Antivirus products which timed out trying to evaluate this file
     pub timeout: u32,
 
     /// Antivirus products which failed to analyze the file
     #[serde(default)]
     pub failure: Option<u32>,
 
-    /// Antivirus products which indicate the file is malicious
+    /// Antivirus products which indicate this file is malicious
     pub malicious: u32,
 
     /// Antivirus products which didn't detect a known malware type
@@ -134,17 +134,20 @@ pub struct LastAnalysisStats {
 impl LastAnalysisStats {
     /// Return the number of antivirus products which could have evaluated this file,
     /// and exclude errors, including unsupported file type.
+    #[must_use]
     pub fn av_count(&self) -> u32 {
         self.harmless + self.suspicious + self.malicious + self.undetected
     }
 
     /// Return the number of antivirus products which think the file is benign,
     /// which is harmless and undetected
+    #[must_use]
     pub fn safe_count(&self) -> u32 {
         self.harmless + self.undetected
     }
 
     /// Return the number of antivirus products which had errors for this file
+    #[must_use]
     pub fn error_count(&self) -> u32 {
         self.type_unsupported.unwrap_or_default()
             + self.confirmed_timeout.unwrap_or_default()
@@ -154,6 +157,7 @@ impl LastAnalysisStats {
 
     /// In an effort to error on the side of caution, call a file benign is no antivirus products
     /// call it malicious or suspicious
+    #[must_use]
     pub fn is_benign(&self) -> bool {
         self.malicious == 0 && self.suspicious == 0
     }
