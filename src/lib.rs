@@ -102,14 +102,22 @@ impl VirusTotalClient {
             })
     }
 
-    /// Get the unparsed file report from Virus Total for an MD5, SHA-1, or SHA-256 hash, which is assumed to be valid.
+    /// Get the unparsed report from Virus Total for a known type.
+    ///
+    /// File: report given an MD5, SHA-1, or SHA-256 hash
+    /// Domain: a fully qualified domain name
+    /// IP address: an ip address
     ///
     /// # Errors
     ///
     /// Will return an error if there is a networking problem.
     #[inline]
-    pub async fn get_file_report_raw(&self, file_hash: &str) -> Result<Bytes, VirusTotalError> {
-        self.other(&format!("files/{file_hash}")).await
+    pub async fn get_report_raw(
+        &self,
+        record_type: RecordType,
+        resource: &str,
+    ) -> Result<Bytes, VirusTotalError> {
+        self.other(&format!("{record_type}/{resource}")).await
     }
 
     /// Get a parsed file report from Virus Total for an MD5, SHA-1, or SHA-256 hash, which is assumed to be valid.
@@ -121,7 +129,7 @@ impl VirusTotalClient {
         &self,
         file_hash: &str,
     ) -> Result<ReportResponseHeader<ScanResultAttributes>, VirusTotalError> {
-        let body = self.get_file_report_raw(file_hash).await?;
+        let body = self.get_report_raw(RecordType::File, file_hash).await?;
         let json_response = String::from_utf8(body.to_ascii_lowercase())
             .map_err(|_e| VirusTotalError::UTF8Error(body.to_vec()))?;
         let report: ReportRequestResponse<ReportResponseHeader<ScanResultAttributes>> =
@@ -516,16 +524,6 @@ impl VirusTotalClient {
         }
     }
 
-    /// Get a Virus Total report for a domain, returning the raw bytes
-    ///
-    /// # Errors
-    ///
-    /// Will return an error if there is a networking problem.
-    #[inline]
-    pub async fn get_domain_report_raw(&self, domain: &str) -> Result<Bytes, VirusTotalError> {
-        self.other(&format!("domains/{domain}")).await
-    }
-
     /// Get a Virus Total report for a domain, returning the parsed response
     ///
     /// # Errors
@@ -535,7 +533,7 @@ impl VirusTotalClient {
         &self,
         domain: &str,
     ) -> Result<ReportResponseHeader<DomainAttributes>, VirusTotalError> {
-        let body = self.get_domain_report_raw(domain).await?;
+        let body = self.get_report_raw(RecordType::Domain, domain).await?;
         let json_response = String::from_utf8(body.to_ascii_lowercase())
             .map_err(|_e| VirusTotalError::UTF8Error(body.to_vec()))?;
         let report: ReportRequestResponse<ReportResponseHeader<DomainAttributes>> =
@@ -610,16 +608,6 @@ impl VirusTotalClient {
             })
     }
 
-    /// Get a Virus Total report for an IP address, returning the raw bytes
-    ///
-    /// # Errors
-    ///
-    /// Will return an error if there is a networking problem.
-    #[inline]
-    pub async fn get_ip_report_raw(&self, ip: &str) -> Result<Bytes, VirusTotalError> {
-        self.other(&format!("ip_addresses/{ip}")).await
-    }
-
     /// Get a Virus Total report for an IP address, returning the parsed response
     ///
     /// # Errors
@@ -629,7 +617,7 @@ impl VirusTotalClient {
         &self,
         ip: &str,
     ) -> Result<ReportResponseHeader<IPAttributes>, VirusTotalError> {
-        let body = self.get_ip_report_raw(ip).await?;
+        let body = self.get_report_raw(RecordType::IPAddress, ip).await?;
         let json_response = String::from_utf8(body.to_ascii_lowercase())
             .map_err(|_e| VirusTotalError::UTF8Error(body.to_vec()))?;
         let report: ReportRequestResponse<ReportResponseHeader<IPAttributes>> =
