@@ -1,13 +1,5 @@
 [graph]
-targets = [
-    "aarch64-apple-darwin",
-    "aarch64-unknown-linux-gnu",
-    "aarch64-unknown-linux-musl",
-    "x86_64-apple-darwin",
-    "x86_64-pc-windows-msvc",
-    "x86_64-unknown-linux-gnu",
-    "x86_64-unknown-linux-musl",
-]
+targets = []
 all-features = true
 
 [advisories]
@@ -18,6 +10,7 @@ ignore = [
 allow = [
     "Apache-2.0",
     "Apache-2.0 WITH LLVM-exception",
+    "CDLA-Permissive-2.0",
     "MIT",
     "MPL-2.0",
     "BSD-3-Clause",
