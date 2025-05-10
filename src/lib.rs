@@ -261,7 +261,7 @@ impl VirusTotalClient {
             })
     }
 
-    /// Submit a file by path to Virus Total and receive parsed response.
+    /// Submit a file by path to Virus Total and receive a parsed response.
     ///
     /// # Errors
     ///
@@ -330,7 +330,7 @@ impl VirusTotalClient {
             })
     }
 
-    /// Submit bytes to Virus Total and receive parsed response.
+    /// Submit bytes to Virus Total and receive a parsed response.
     ///
     /// # Errors
     ///
