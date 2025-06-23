@@ -30,7 +30,7 @@ jobs:
             api.github.com:443
 
       - name: Run Commisery
-        uses: tomtom-international/commisery-action@f830c46b56b05c427cb2b5b650d848bee1681c99 # v3.5.0
+        uses: tomtom-international/commisery-action@2d51cf5aa9b1b795e34b75e1de6b222c5bdf1b1e # v4.0.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           validate-pull-request: false
