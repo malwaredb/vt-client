@@ -235,10 +235,10 @@ impl Action {
                 if report.attributes.continent.is_some() || report.attributes.country.is_some() {
                     println!("Location:");
                     if let Some(continent) = &report.attributes.continent {
-                        println!("\tContinent: {}", continent);
+                        println!("\tContinent: {continent}");
                     }
                     if let Some(country) = &report.attributes.country {
-                        println!("\tCountry: {}", country);
+                        println!("\tCountry: {country}");
                     }
                 }
 
