@@ -714,7 +714,7 @@ mod test {
     const ELF: &[u8] = include_bytes!("../testdata/elf_haiku_x86");
 
     #[tokio::test]
-    #[ignore]
+    #[ignore = "don't test with VT API key in CI"]
     async fn api() {
         if let Ok(api_key) = std::env::var("VT_API_KEY") {
             const HASH: &str = "fff40032c3dc062147c530e3a0a5c7e6acda4d1f1369fbc994cddd3c19a2de88";
