@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
+/// Parser for certificate data parsing
+pub mod certs;
+
 use crate::VirusTotalError;
 
 use std::collections::HashMap;

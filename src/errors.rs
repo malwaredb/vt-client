@@ -152,6 +152,18 @@ impl VirusTotalError {
             VirusTotalError::UnknownError => "Some other unknown or unforeseen error occurred",
         }
     }
+
+    /// Convenience method to get inner string from the error type
+    #[must_use]
+    #[inline]
+    pub fn inner_string(&self) -> Option<String> {
+        match self {
+            VirusTotalError::IOError(s)
+            | VirusTotalError::JsonError(s)
+            | VirusTotalError::NetworkError(s) => Some(s.clone()),
+            _ => None,
+        }
+    }
 }
 
 impl std::fmt::Display for VirusTotalError {

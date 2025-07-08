@@ -48,7 +48,7 @@ pub struct IPAttributes {
 
     /// SSL information for the https certificate
     #[serde(default)]
-    pub last_https_certificate: HashMap<String, serde_json::Value>,
+    pub last_https_certificate: Option<crate::common::certs::SSLCertificate>,
 
     /// Date of the https certificate
     #[cfg(feature = "chrono")]
@@ -96,6 +96,10 @@ pub struct IPAttributes {
     /// Tags
     #[serde(default)]
     pub tags: Vec<String>,
+
+    /// Registration Domain Access Protocol data, see <https://about.rdap.org>
+    #[serde(default)]
+    pub rdap: HashMap<String, serde_json::Value>,
 
     /// Anything else not captured by this struct
     #[serde(flatten)]

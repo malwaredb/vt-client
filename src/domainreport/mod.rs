@@ -121,7 +121,7 @@ pub struct DomainAttributes {
 
     /// SSL information for the https domain
     #[serde(default)]
-    pub last_https_certificate: HashMap<String, serde_json::Value>,
+    pub last_https_certificate: Option<crate::common::certs::SSLCertificate>,
 
     /// Mapping services and categories
     #[serde(default)]
@@ -406,5 +406,16 @@ mod tests {
         eprintln!("Remaining fields: {}", report.attributes.extra.len());
         eprintln!("{:?}", report.attributes.extra);
         assert!(report.attributes.extra.is_empty());
+
+        #[cfg(feature = "chrono")]
+        {
+            assert!(report
+                .attributes
+                .last_https_certificate
+                .unwrap()
+                .validity
+                .not_before_to_chrono()
+                .is_ok());
+        }
     }
 }
