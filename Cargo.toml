@@ -54,7 +54,7 @@ edition = "2021"
 homepage = "https://malwaredb.net/"
 license = "Apache-2.0"
 repository = "https://github.com/malwaredb/vt-client"
-version = "0.5.1"
+version = "0.5.2"
 
 [workspace.dependencies]
 # Internal depencency
