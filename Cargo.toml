@@ -8,6 +8,7 @@ authors.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+rust-version.workspace = true
 
 [features]
 default = []
@@ -55,6 +56,7 @@ homepage = "https://malwaredb.net/"
 license = "Apache-2.0"
 repository = "https://github.com/malwaredb/vt-client"
 version = "0.5.2"
+rust-version = "1.82"
 
 [workspace.dependencies]
 # Internal depencency
