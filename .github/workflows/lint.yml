@@ -20,7 +20,7 @@ jobs:
             static.crates.io:443
             static.rust-lang.org:443
 
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
       - name: Setup Rust toolchain
         run: rustup show && rustup update
       - name: cargo fmt
@@ -31,7 +31,7 @@ jobs:
   check-spdx-headers:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
       - uses: enarx/spdx@b5bfdd4410071bf058c8333d0e70020001524b6b # master
         with:
           licenses: Apache-2.0
@@ -56,7 +56,7 @@ jobs:
             static.rust-lang.org:443
 
       - name: Checkout repository
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
       - name: Install nightly toolchain
         uses: dtolnay/rust-toolchain@53c04d3685fcc3ca67ce478eb9c2ea5c051a4a63 # nightly
@@ -89,7 +89,7 @@ jobs:
             static.crates.io:443
 
       - name: Checkout repository
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
       - name: Install Cargo Audit & Deny
         run: |
@@ -125,7 +125,7 @@ jobs:
             static.crates.io:443
 
       - name: Checkout repository
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
       - name: Install Cargo Hack
         uses: taiki-e/install-action@3aeb53dd041c652ad28c1714cb9a10a4fbde32ff # cargo-hack
