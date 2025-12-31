@@ -55,7 +55,7 @@ edition = "2021"
 homepage = "https://malwaredb.net/"
 license = "Apache-2.0"
 repository = "https://github.com/malwaredb/vt-client"
-version = "0.5.3"
+version = "0.5.4"
 rust-version = "1.84"
 
 [workspace.dependencies]
