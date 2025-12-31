@@ -119,11 +119,12 @@ impl VirusTotalError {
 
             // If the error was a failure to parse the VirusTotal report, return the string representation
             // This could be a malformed VirusTotal report or a malformed, or unknown error message.
-            Err(e) => Err(VirusTotalError::JsonError(e.to_string())),
+            Err(_e) => Err(VirusTotalError::JsonError(data.to_string())),
         }
     }
 
     /// Get the long message from the error
+    #[inline]
     #[must_use]
     pub fn message(&self) -> &'static str {
         match self {
