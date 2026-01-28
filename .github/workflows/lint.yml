@@ -36,8 +36,8 @@ jobs:
         with:
           licenses: Apache-2.0
 
-  udeps:
-    name: Unused dependencies
+  audit_deny_udeps:
+    name: Cargo Audit, Deny, Udeps
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
@@ -61,51 +61,19 @@ jobs:
       - name: Install nightly toolchain
         uses: dtolnay/rust-toolchain@53c04d3685fcc3ca67ce478eb9c2ea5c051a4a63 # nightly
 
-      - name: Install cargo-udeps
-        run: |
-          wget https://github.com/est31/cargo-udeps/releases/download/v0.1.54/cargo-udeps-v0.1.54-x86_64-unknown-linux-musl.tar.gz
-          tar -xzf cargo-udeps-v0.1.54-x86_64-unknown-linux-musl.tar.gz
-          mv cargo-udeps-v0.1.54-x86_64-unknown-linux-musl/cargo-udeps ~/.cargo/bin/
-
-      - name: Run udeps
-        run: cargo +nightly udeps
-
-  audit:
-    name: Cargo Audit & Deny
-    runs-on: ubuntu-latest
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+      - name: Install Cargo Audit
+        uses: taiki-e/install-action@710817a1645ef40daad5bcde7431ceccf6cc3528 # v2.67.13
         with:
-          disable-sudo: true
-          egress-policy: block
-          allowed-endpoints: >
-            api.github.com:443
-            crates.io:443
-            github.com:443
-            index.crates.io:443
-            objects.githubusercontent.com:443
-            release-assets.githubusercontent.com:443
-            static.crates.io:443
-
-      - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-
-      - name: Install Cargo Audit & Deny
-        run: |
-          wget https://github.com/rustsec/rustsec/releases/download/cargo-audit%2Fv0.21.2/cargo-audit-x86_64-unknown-linux-musl-v0.21.2.tgz
-          tar -xzf cargo-audit-x86_64-unknown-linux-musl-v0.21.2.tgz
-          mv cargo-audit-x86_64-unknown-linux-musl-v0.21.2/cargo-audit ~/.cargo/bin/
-          
-          wget https://github.com/EmbarkStudios/cargo-deny/releases/download/0.18.2/cargo-deny-0.18.2-x86_64-unknown-linux-musl.tar.gz
-          tar -xzf cargo-deny-0.18.2-x86_64-unknown-linux-musl.tar.gz
-          mv cargo-deny-0.18.2-x86_64-unknown-linux-musl/cargo-deny ~/.cargo/bin/
+          tool: cargo-audit,cargo-deny,cargo-udeps
 
       - name: Run Cargo Audit
         run: cargo audit
 
       - name: Run Cargo deny
         run: cargo deny --all-features check
+
+      - name: Run Cargo udeps
+        run: cargo +nightly udeps
 
   hack:
     name: Cargo Hack
@@ -128,7 +96,9 @@ jobs:
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Install Cargo Hack
-        uses: taiki-e/install-action@3aeb53dd041c652ad28c1714cb9a10a4fbde32ff # cargo-hack
+        uses: taiki-e/install-action@710817a1645ef40daad5bcde7431ceccf6cc3528 # v2.67.13
+        with:
+          tool: cargo-hack
 
       - name: Run Cargo Hack
         run: cargo hack check --each-feature --no-dev-deps
