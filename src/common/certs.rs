@@ -297,6 +297,7 @@ mod tests {
     fn cert() {
         let cert: super::SSLCertificate = serde_json::from_str(CERT_INFO).unwrap();
         assert_eq!(cert.size, 1273);
+        #[cfg(feature = "chrono")]
         assert!(cert.validity.not_before_to_chrono().is_ok());
         assert!(cert.extra.is_empty());
     }
