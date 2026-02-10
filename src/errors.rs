@@ -100,6 +100,10 @@ pub enum VirusTotalError {
     /// A search query didn't have an offset
     NonPaginatedResults,
 
+    /// An error which may indicate a duplicate request, such as requesting a rescan again before
+    /// the prior request has completed
+    ConflictError(String),
+
     /// Some other unknown or unforeseen error occurred
     UnknownError,
 }
@@ -150,6 +154,7 @@ impl VirusTotalError {
             VirusTotalError::NetworkError(_) => "Network error",
             VirusTotalError::IOError(_) => "Error opening a file for submitting to VirusTotal",
             VirusTotalError::NonPaginatedResults => "A search query didn't have an offset",
+            VirusTotalError::ConflictError(_) => "Possible duplicate request or similar error",
             VirusTotalError::UnknownError => "Some other unknown or unforeseen error occurred",
         }
     }
