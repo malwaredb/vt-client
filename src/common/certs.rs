@@ -214,6 +214,7 @@ impl Validity {
     ///
     /// Returns an error if the data wasn't in the correct format
     #[cfg(feature = "chrono")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
     pub fn not_before_to_chrono(&self) -> ParseResult<NaiveDateTime> {
         NaiveDateTime::parse_from_str(&self.not_before, Self::FORMAT)
     }
@@ -224,6 +225,7 @@ impl Validity {
     ///
     /// Returns an error if the data wasn't in the correct format
     #[cfg(feature = "chrono")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
     pub fn not_after_to_chrono(&self) -> ParseResult<NaiveDateTime> {
         NaiveDateTime::parse_from_str(&self.not_after, Self::FORMAT)
     }

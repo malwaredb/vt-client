@@ -389,6 +389,7 @@ impl Display for Positives {
 
 /// Find files submitted on or after a specific date, or within a date range
 #[cfg(feature = "chrono")]
+#[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
 #[derive(Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
 pub struct FirstSubmission {
     /// First seen date & time
@@ -406,6 +407,7 @@ pub struct FirstSubmission {
 }
 
 #[cfg(feature = "chrono")]
+#[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
 impl FirstSubmission {
     /// Year-Month-Day format for courser file submission selection
     pub const FORMAT_DATE: &'static str = "%Y-%m-%d";
@@ -481,6 +483,7 @@ impl FirstSubmission {
 }
 
 #[cfg(feature = "chrono")]
+#[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
 impl Display for FirstSubmission {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         if self.exact {
@@ -498,6 +501,7 @@ impl Display for FirstSubmission {
 }
 
 #[cfg(feature = "chrono")]
+#[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
 impl Add<Days> for FirstSubmission {
     type Output = FirstSubmission;
 
@@ -519,6 +523,7 @@ impl Add<Days> for FirstSubmission {
 }
 
 #[cfg(feature = "chrono")]
+#[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
 impl Shl<Days> for FirstSubmission {
     type Output = Self;
 
@@ -539,6 +544,7 @@ impl Shl<Days> for FirstSubmission {
 }
 
 #[cfg(feature = "chrono")]
+#[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
 impl Shr<Days> for FirstSubmission {
     type Output = Self;
 
@@ -587,6 +593,7 @@ impl Add<Tags> for FileType {
 }
 
 #[cfg(feature = "chrono")]
+#[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
 impl Add<FirstSubmission> for FileType {
     type Output = String;
     fn add(self, rhs: FirstSubmission) -> Self::Output {
@@ -609,6 +616,7 @@ impl Add<Positives> for Tags {
 }
 
 #[cfg(feature = "chrono")]
+#[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
 impl Add<FirstSubmission> for Tag {
     type Output = String;
     fn add(self, rhs: FirstSubmission) -> Self::Output {
@@ -638,6 +646,7 @@ impl Add<String> for FileTypes {
 }
 
 #[cfg(feature = "chrono")]
+#[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
 impl Add<FirstSubmission> for FileTypes {
     type Output = String;
     fn add(self, rhs: FirstSubmission) -> Self::Output {
@@ -662,6 +671,7 @@ impl Add<String> for Tag {
 }
 
 #[cfg(feature = "chrono")]
+#[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
 impl Add<FirstSubmission> for Tags {
     type Output = String;
 
@@ -695,6 +705,7 @@ impl Add<FileType> for String {
 }
 
 #[cfg(feature = "chrono")]
+#[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
 impl Add<FirstSubmission> for String {
     type Output = String;
 
@@ -704,6 +715,7 @@ impl Add<FirstSubmission> for String {
 }
 
 #[cfg(feature = "chrono")]
+#[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
 impl Add<FileType> for FirstSubmission {
     type Output = String;
 
@@ -713,6 +725,7 @@ impl Add<FileType> for FirstSubmission {
 }
 
 #[cfg(feature = "chrono")]
+#[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
 impl Add<Positives> for FirstSubmission {
     type Output = String;
 
@@ -722,6 +735,7 @@ impl Add<Positives> for FirstSubmission {
 }
 
 #[cfg(feature = "chrono")]
+#[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
 impl Add<String> for FirstSubmission {
     type Output = String;
 
@@ -731,6 +745,7 @@ impl Add<String> for FirstSubmission {
 }
 
 #[cfg(feature = "chrono")]
+#[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
 impl Add<Tag> for FirstSubmission {
     type Output = String;
 
@@ -740,6 +755,7 @@ impl Add<Tag> for FirstSubmission {
 }
 
 #[cfg(feature = "chrono")]
+#[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
 impl Add<Tags> for FirstSubmission {
     type Output = String;
 
