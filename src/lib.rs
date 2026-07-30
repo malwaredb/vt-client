@@ -41,7 +41,7 @@ use zeroize::{Zeroize, ZeroizeOnDrop};
 const THIRTY_TWO_MEGABYTES: u64 = 32 * 1024 * 1024;
 
 /// Virus Total client object
-#[derive(Clone, Deserialize, Zeroize, ZeroizeOnDrop)]
+#[derive(Clone, PartialEq, Eq, Hash, Deserialize, Zeroize, ZeroizeOnDrop)]
 #[cfg_attr(feature = "clap", derive(clap::Args))]
 pub struct VirusTotalClient {
     /// The API key used to interact with Virus Total
@@ -77,8 +77,9 @@ impl VirusTotalClient {
     pub const KEY_LEN: usize = 64;
 
     /// New Virus Total client given an API key which is assumed to be valid.
+    #[inline]
     #[must_use]
-    pub fn new(key: String) -> Self {
+    pub const fn new(key: String) -> Self {
         Self { key }
     }
 
