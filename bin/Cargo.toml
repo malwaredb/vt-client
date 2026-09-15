@@ -4,6 +4,7 @@ description = "VirusTotal command line client"
 keywords = ["cybersecurity", "malware", "malware-analysis", "virustotal"]
 authors.workspace = true
 edition.workspace = true
+homepage.workspace = true
 license.workspace = true
 repository.workspace = true
 version.workspace = true

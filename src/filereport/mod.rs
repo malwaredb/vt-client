@@ -203,7 +203,7 @@ pub struct ScanResultAttributes {
     pub reputation: i32,
 
     /// Mach-O details, if a Mach-O file (macOS, iOS, etc)
-    /// This is a vector since there is a separate [`macho::MachInfo`] struct per
+    /// This is a vector since there is a separate [`macho::MachoInfo`] struct per
     /// each architecture if this is a Fat Mach-O file.
     #[serde(default)]
     pub macho_info: Option<Vec<macho::MachoInfo>>,

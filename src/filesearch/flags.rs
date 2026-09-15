@@ -217,7 +217,7 @@ impl BitOr for FileType {
     }
 }
 
-/// [Vec<FileType>] with [Display] already implemented showing "OR" between types.
+/// [`Vec<FileType>`] with [Display] already implemented showing "OR" between types.
 #[derive(Clone, Debug, Hash, Serialize, Deserialize)]
 pub struct FileTypes(pub Vec<FileType>);
 
@@ -301,7 +301,7 @@ impl BitOr for Tag {
     }
 }
 
-/// [Vec<Tag>] with [Display] already implemented.
+/// [`Vec<Tag>`] with [Display] already implemented.
 #[derive(Clone, Debug, Hash, Serialize, Deserialize)]
 pub struct Tags(pub Vec<Tag>);
 
@@ -402,7 +402,7 @@ pub struct FirstSubmission {
     pub exact: bool,
 
     /// For date vs datetime. Use only the specified formats [`FirstSubmission::FORMAT_DATE`] or
-    /// [`FirstSubmission::FORMATE_DATE_TIME`], otherwise there will likely be errors or empty results
+    /// [`FirstSubmission::FORMAT_DATETIME`], otherwise there will likely be errors or empty results
     pub format: &'static str,
 }
 

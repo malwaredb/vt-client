@@ -6,6 +6,8 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      RUSTDOCFLAGS: -Dwarnings
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
@@ -13,16 +15,25 @@ jobs:
           disable-sudo: true
           egress-policy: block
           allowed-endpoints: >
+            api.github.com:443
             crates.io:443
             github.com:443
             index.crates.io:443
+            release-assets.githubusercontent.com:443
             static.crates.io:443
+            static.rust-lang.org:443
+            tmaproduction.blob.core.windows.net:443
+            tuf-repo.github.com:443
+            tuf-repo-cdn.sigstore.dev:443
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: cargo test
         run: cargo test --workspace --all-features
       - name: build
         run: cargo build --workspace
+      - uses: dtolnay/rust-toolchain@be39649afda95dbf70f87cce95f68b8d5797b296 # nightly
+      - uses: dtolnay/install@982daea0f5d846abc3c83e01a6a1d73c040047c1 # cargo-docs-rs
+      - run: cargo +nightly docs-rs
 
   crates_io_publish:
     runs-on: ubuntu-latest
