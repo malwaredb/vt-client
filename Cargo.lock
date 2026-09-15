@@ -929,7 +929,7 @@ checksum = "4050469837a6ff301cd14c1f8f24f88549e6d548f24f64e2148eb0f72cebc51f"
 
 [[package]]
 name = "malwaredb-virustotal"
-version = "0.5.5"
+version = "0.5.6"
 dependencies = [
  "bytes",
  "chrono",
@@ -948,7 +948,7 @@ dependencies = [
 
 [[package]]
 name = "malwaredb-virustotal-bin"
-version = "0.5.5"
+version = "0.5.6"
 dependencies = [
  "anyhow",
  "clap",
