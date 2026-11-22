@@ -6,6 +6,8 @@ use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "chrono")]
 use chrono::{NaiveDateTime, ParseResult};
+#[cfg(feature = "jiff")]
+use jiff::civil;
 
 /// Information about a certificate
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -205,7 +207,7 @@ pub struct Validity {
 }
 
 impl Validity {
-    #[cfg(feature = "chrono")]
+    #[cfg(any(feature = "chrono", feature = "jiff"))]
     const FORMAT: &'static str = "%Y-%m-%d %H:%M:%S";
 
     /// Convert the `not_before` date to `NaiveDateTime`
@@ -219,6 +221,17 @@ impl Validity {
         NaiveDateTime::parse_from_str(&self.not_before, Self::FORMAT)
     }
 
+    /// Convert the `not_before` date to [`civil::DateTime`]
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the data wasn't in the correct format
+    #[cfg(feature = "jiff")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "jiff")))]
+    pub fn not_before_to_jiff(&self) -> Result<civil::DateTime, jiff::Error> {
+        civil::DateTime::strptime(Self::FORMAT, &self.not_before)
+    }
+
     /// Convert the `not_after` date to `NaiveDateTime`
     ///
     /// # Errors
@@ -229,10 +242,23 @@ impl Validity {
     pub fn not_after_to_chrono(&self) -> ParseResult<NaiveDateTime> {
         NaiveDateTime::parse_from_str(&self.not_after, Self::FORMAT)
     }
+
+    /// Convert the `not_after` date to [`civil::DateTime`]
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the data wasn't in the correct format
+    #[cfg(feature = "jiff")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "jiff")))]
+    pub fn not_after_to_jiff(&self) -> Result<civil::DateTime, jiff::Error> {
+        civil::DateTime::strptime(Self::FORMAT, &self.not_after)
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    #[cfg(feature = "jiff")]
+    use jiff::civil;
 
     const CERT_INFO: &str = r#"
     {
@@ -301,6 +327,17 @@ mod tests {
         assert_eq!(cert.size, 1273);
         #[cfg(feature = "chrono")]
         assert!(cert.validity.not_before_to_chrono().is_ok());
+        #[cfg(feature = "jiff")]
+        {
+            assert_eq!(
+                cert.validity.not_before_to_jiff().unwrap(),
+                civil::date(2025, 6, 13).at(0, 50, 35, 0)
+            );
+            assert_eq!(
+                cert.validity.not_after_to_jiff().unwrap(),
+                civil::date(2025, 9, 11).at(0, 50, 34, 0)
+            );
+        }
         assert!(cert.extra.is_empty());
     }
 }

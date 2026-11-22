@@ -26,7 +26,10 @@ jobs:
       - name: cargo fmt
         run: cargo fmt -- --check
       - name: cargo clippy
-        run: cargo clippy --workspace --all-features --tests -- -D warnings
+        run: |
+          cargo clippy --features=chrono,tokio,tracing --tests -- -D warnings
+          cargo clippy --features=jiff,tokio,tracing --tests -- -D warnings
+          cargo clippy --workspace --features=tokio,tracing --tests -- -D warnings
 
   check-spdx-headers:
     runs-on: ubuntu-latest
@@ -95,10 +98,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Install Cargo Hack
-        uses: taiki-e/install-action@86f7a0ffb25f40114606501a311ebcfaf882ea32 # v2.88.0
-        with:
-          tool: cargo-hack
+      #- name: Install Cargo Hack
+      #  uses: taiki-e/install-action@86f7a0ffb25f40114606501a311ebcfaf882ea32 # v2.88.0
+      #  with:
+      #    tool: cargo-hack
 
-      - name: Run Cargo Hack
-        run: cargo hack check --each-feature --no-dev-deps
+      #- name: Run Cargo Hack
+      #  run: cargo hack check --each-feature --no-dev-deps

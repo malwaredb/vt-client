@@ -9,6 +9,11 @@ use chrono::{
     serde::{ts_seconds, ts_seconds_option},
     DateTime, Utc,
 };
+#[cfg(feature = "jiff")]
+use jiff::{
+    fmt::serde::timestamp::second::{optional as ts_seconds_option, required as ts_seconds},
+    Timestamp,
+};
 use serde::{Deserialize, Serialize};
 
 /// Report for a domain
@@ -21,8 +26,28 @@ pub struct DomainAttributes {
     pub last_modification_date: DateTime<Utc>,
 
     /// When the report was created
-    #[cfg(not(feature = "chrono"))]
+    #[cfg(feature = "jiff")]
+    #[serde(with = "ts_seconds")]
+    pub last_modification_date: Timestamp,
+
+    /// When the report was created
+    #[cfg(not(any(feature = "chrono", feature = "jiff")))]
     pub last_modification_date: u64,
+
+    /// When the domain was first seen
+    #[cfg(feature = "chrono")]
+    #[serde(default, with = "ts_seconds_option")]
+    pub first_seen_date: Option<DateTime<Utc>>,
+
+    /// When the domain was first seen
+    #[cfg(feature = "jiff")]
+    #[serde(default, with = "ts_seconds_option")]
+    pub first_seen_date: Option<Timestamp>,
+
+    /// When the domain was first seen
+    #[cfg(not(any(feature = "chrono", feature = "jiff")))]
+    #[serde(default)]
+    pub first_seen_date: Option<u64>,
 
     /// Date of the https certificate
     #[cfg(feature = "chrono")]
@@ -30,7 +55,12 @@ pub struct DomainAttributes {
     pub last_https_certificate_date: Option<DateTime<Utc>>,
 
     /// Date of the https certificate
-    #[cfg(not(feature = "chrono"))]
+    #[cfg(feature = "jiff")]
+    #[serde(with = "ts_seconds_option", default)]
+    pub last_https_certificate_date: Option<Timestamp>,
+
+    /// Date of the https certificate
+    #[cfg(not(any(feature = "chrono", feature = "jiff")))]
     #[serde(default)]
     pub last_https_certificate_date: Option<u64>,
 
@@ -40,7 +70,12 @@ pub struct DomainAttributes {
     pub creation_date: DateTime<Utc>,
 
     /// Domain creation date
-    #[cfg(not(feature = "chrono"))]
+    #[cfg(feature = "jiff")]
+    #[serde(with = "ts_seconds")]
+    pub creation_date: Timestamp,
+
+    /// Domain creation date
+    #[cfg(not(any(feature = "chrono", feature = "jiff")))]
     pub creation_date: u64,
 
     /// WHOIS date
@@ -49,7 +84,12 @@ pub struct DomainAttributes {
     pub whois_date: DateTime<Utc>,
 
     /// WHOIS date
-    #[cfg(not(feature = "chrono"))]
+    #[cfg(feature = "jiff")]
+    #[serde(with = "ts_seconds")]
+    pub whois_date: Timestamp,
+
+    /// WHOIS date
+    #[cfg(not(any(feature = "chrono", feature = "jiff")))]
     pub whois_date: u64,
 
     /// WHOIS information
@@ -61,7 +101,12 @@ pub struct DomainAttributes {
     pub last_dns_records_date: Option<DateTime<Utc>>,
 
     /// Last DNS record update
-    #[cfg(not(feature = "chrono"))]
+    #[cfg(feature = "jiff")]
+    #[serde(with = "ts_seconds_option", default)]
+    pub last_dns_records_date: Option<Timestamp>,
+
+    /// Last DNS record update
+    #[cfg(not(any(feature = "chrono", feature = "jiff")))]
     #[serde(default)]
     pub last_dns_records_date: Option<u64>,
 
@@ -71,7 +116,12 @@ pub struct DomainAttributes {
     pub last_update_date: Option<DateTime<Utc>>,
 
     /// Last update date
-    #[cfg(not(feature = "chrono"))]
+    #[cfg(feature = "jiff")]
+    #[serde(with = "ts_seconds_option", default)]
+    pub last_update_date: Option<Timestamp>,
+
+    /// Last update date
+    #[cfg(not(any(feature = "chrono", feature = "jiff")))]
     #[serde(default)]
     pub last_update_date: Option<u64>,
 
@@ -105,7 +155,12 @@ pub struct DomainAttributes {
     pub last_analysis_date: DateTime<Utc>,
 
     /// When the domain was last analyzed by Virus Total
-    #[cfg(not(feature = "chrono"))]
+    #[cfg(feature = "jiff")]
+    #[serde(with = "ts_seconds")]
+    pub last_analysis_date: Timestamp,
+
+    /// When the domain was last analyzed by Virus Total
+    #[cfg(not(any(feature = "chrono", feature = "jiff")))]
     pub last_analysis_date: u64,
 
     /// VT's reputation of the domain
@@ -133,7 +188,12 @@ pub struct DomainAttributes {
     pub expiration_date: Option<DateTime<Utc>>,
 
     /// When the domain expires
-    #[cfg(not(feature = "chrono"))]
+    #[cfg(feature = "jiff")]
+    #[serde(with = "ts_seconds_option", default)]
+    pub expiration_date: Option<Timestamp>,
+
+    /// When the domain expires
+    #[cfg(not(any(feature = "chrono", feature = "jiff")))]
     pub expiration_date: Option<u64>,
 
     /// Registration Domain Access Protocol data, see <https://about.rdap.org>
@@ -380,7 +440,12 @@ pub struct PopularityRankEntry {
     pub timestamp: DateTime<Utc>,
 
     /// Timestamp
-    #[cfg(not(feature = "chrono"))]
+    #[cfg(feature = "jiff")]
+    #[serde(with = "ts_seconds")]
+    pub timestamp: Timestamp,
+
+    /// Timestamp
+    #[cfg(not(any(feature = "chrono", feature = "jiff")))]
     pub timestamp: u64,
 
     /// Rank
@@ -415,6 +480,17 @@ mod tests {
                 .unwrap()
                 .validity
                 .not_before_to_chrono()
+                .is_ok());
+        }
+
+        #[cfg(feature = "jiff")]
+        {
+            assert!(report
+                .attributes
+                .last_https_certificate
+                .unwrap()
+                .validity
+                .not_before_to_jiff()
                 .is_ok());
         }
     }

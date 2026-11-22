@@ -15,6 +15,7 @@ rust-version.workspace = true
 default = ["native-tls"]
 chrono = ["dep:chrono"]
 clap = ["dep:clap"]
+jiff = ["dep:jiff"]
 native-tls = ["reqwest/native-tls"]
 native-tls-vendored = ["reqwest/native-tls-vendored"]
 rustls = ["reqwest/rustls"]
@@ -26,6 +27,7 @@ unsafe-serialization = []
 bytes = { workspace = true }
 chrono = { workspace = true, features = ["clock", "serde"], optional = true }
 clap = { workspace = true, features = ["derive", "env", "std"], optional = true }
+jiff = { workspace = true, features = ["serde", "std"], optional = true }
 reqwest = { workspace = true, features = ["gzip", "http2", "multipart", "stream"] }
 serde = { workspace = true, features = ["derive", "std"] }
 serde_json = { workspace = true, features = ["alloc"] }
@@ -69,6 +71,7 @@ bytes = { version = "1.12", default-features = false }
 chrono = { version = "0.4", default-features = false }
 clap = { version = "4.6", default-features = false }
 hex = { version = "0.4", default-features = false }
+jiff = { version = "0.2", default-features = false }
 reqwest = { version = "0.13", default-features = true }
 rstest = { version = "0.28", default-features = false }
 serde = { version = "1.0", default-features = false }

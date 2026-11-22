@@ -4,6 +4,10 @@
 use chrono::serde::ts_seconds_option;
 #[cfg(feature = "chrono")]
 use chrono::{DateTime, Utc};
+#[cfg(feature = "jiff")]
+use jiff::fmt::serde::timestamp::second::optional as ts_seconds_option;
+#[cfg(feature = "jiff")]
+use jiff::Timestamp;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -21,7 +25,12 @@ pub struct PEInfo {
     pub timestamp: Option<DateTime<Utc>>,
 
     /// When the program was compiled, can be spoofed
-    #[cfg(not(feature = "chrono"))]
+    #[cfg(feature = "jiff")]
+    #[serde(default, with = "ts_seconds_option")]
+    pub timestamp: Option<Timestamp>,
+
+    /// When the program was compiled, can be spoofed
+    #[cfg(not(any(feature = "chrono", feature = "jiff")))]
     pub timestamp: Option<u64>,
 
     /// Compiler information, if available
