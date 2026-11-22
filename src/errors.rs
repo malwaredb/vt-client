@@ -104,6 +104,9 @@ pub enum VirusTotalError {
     /// the prior request has completed
     ConflictError(String),
 
+    /// Http error trying to use the API key
+    ApiKeyError,
+
     /// Some other unknown or unforeseen error occurred
     UnknownError,
 }
@@ -155,6 +158,7 @@ impl VirusTotalError {
             VirusTotalError::IOError(_) => "Error opening a file for submitting to VirusTotal",
             VirusTotalError::NonPaginatedResults => "A search query didn't have an offset",
             VirusTotalError::ConflictError(_) => "Possible duplicate request or similar error",
+            VirusTotalError::ApiKeyError => "The API key is invalid.",
             VirusTotalError::UnknownError => "Some other unknown or unforeseen error occurred",
         }
     }

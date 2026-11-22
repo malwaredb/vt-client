@@ -14,12 +14,13 @@ use anyhow::{bail, Result};
 use clap::{Parser, Subcommand};
 use sha2::{Digest, Sha256};
 
+/// VirusTotal command line client
 #[derive(Parser)]
 #[command(author, about, version)]
 struct Args {
     /// API key for VirusTotal
     #[arg(long, env = "VT_API_KEY")]
-    pub client: VirusTotalClient,
+    pub key: VirusTotalClient,
 
     /// Action to be performed with VirusTotal
     #[clap(subcommand)]
@@ -287,7 +288,7 @@ impl Action {
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<ExitCode> {
     let args = Args::parse();
-    args.action.execute(args.client).await?;
+    args.action.execute(args.key).await?;
 
     Ok(ExitCode::SUCCESS)
 }

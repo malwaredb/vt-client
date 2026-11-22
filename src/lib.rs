@@ -20,6 +20,7 @@ pub mod filereport;
 pub mod filesearch;
 /// Logic for parsing the IP report data from Virus Total
 pub mod ipreport;
+mod vtserde;
 
 use crate::common::{RecordType, ReportRequestResponse, ReportResponseHeader, RescanRequestData};
 use crate::domainreport::DomainAttributes;
@@ -36,37 +37,26 @@ use std::str::FromStr;
 use bytes::Bytes;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::multipart::{Form, Part};
-use serde::{Deserialize, Serialize, Serializer};
+use serde::{Deserialize, Serialize};
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
 const THIRTY_TWO_MEGABYTES: u64 = 32 * 1024 * 1024;
 
 /// Virus Total client object
-#[derive(Clone, PartialEq, Eq, Hash, Deserialize, Zeroize, ZeroizeOnDrop)]
-#[cfg_attr(feature = "clap", derive(clap::Args))]
+#[derive(Clone, Serialize, Deserialize, Zeroize, ZeroizeOnDrop)]
+#[serde(from = "vtserde::VirusTotalSerde", into = "vtserde::VirusTotalSerde")]
 pub struct VirusTotalClient {
-    /// The API key used to interact with Virus Total
-    #[cfg_attr(feature = "clap", arg(long, env = "VT_API_KEY"))]
-    #[serde(alias = "vt_api_key")]
+    /// API key
     key: String,
+
+    /// Http client
+    #[zeroize(skip)]
+    client: reqwest::Client,
 }
 
 impl Debug for VirusTotalClient {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "VirusTotal Client v{}", env!("CARGO_PKG_VERSION"))
-    }
-}
-
-impl Serialize for VirusTotalClient {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        #[cfg(feature = "unsafe-serialization")]
-        return serializer.serialize_str(&self.key);
-
-        #[cfg(not(feature = "unsafe-serialization"))]
-        serializer.serialize_str("your-api-key-here")
     }
 }
 
@@ -78,22 +68,24 @@ impl VirusTotalClient {
     pub const KEY_LEN: usize = 64;
 
     /// New Virus Total client given an API key which is assumed to be valid.
+    ///
+    /// # Errors
+    ///
+    /// String parser error if the key isn't printable, or if the client object can't be created.
     #[inline]
-    #[must_use]
-    pub const fn new(key: String) -> Self {
-        Self { key }
-    }
-
-    /// Generate a client which already knows to send the API key, and asks for gzip responses.
-    #[inline]
-    fn client(&self) -> Result<reqwest::Client, VirusTotalError> {
+    pub fn new(key: String) -> Result<Self, VirusTotalError> {
         let mut headers = HeaderMap::new();
+        #[allow(unused)]
         headers.insert(
             VirusTotalClient::API_KEY,
-            HeaderValue::from_str(&self.key).unwrap(),
+            HeaderValue::from_str(&key).map_err(|e| {
+                #[cfg(feature = "tracing")]
+                tracing::error!("Error creating header value for VirusTotal client: {e}");
+                VirusTotalError::ApiKeyError
+            })?,
         );
 
-        reqwest::ClientBuilder::new()
+        let client = reqwest::ClientBuilder::new()
             .gzip(true)
             .default_headers(headers)
             .build()
@@ -101,7 +93,9 @@ impl VirusTotalClient {
                 #[cfg(feature = "tracing")]
                 tracing::error!("Error creating VirusTotal client: {e}");
                 VirusTotalError::from(e)
-            })
+            })?;
+
+        Ok(Self { key, client })
     }
 
     /// Get the unparsed report from Virus Total for a known type.
@@ -159,7 +153,7 @@ impl VirusTotalClient {
     /// use malwaredb_virustotal::VirusTotalClient;
     ///
     /// // Use of `.unwrap()` for demonstration, don't actually do this.
-    /// let client = VirusTotalClient::new(std::env::var("VT_API_KEY").unwrap());
+    /// let client = VirusTotalClient::new(std::env::var("VT_API_KEY").unwrap()).unwrap();
     /// # tokio_test::block_on(async {
     /// let response = client.request_file_rescan("abc91ba39ea3220d23458f8049ed900c16ce1023").await.unwrap();
     /// assert_eq!(response.rescan_type, "analysis");
@@ -195,8 +189,6 @@ impl VirusTotalClient {
     where
         P: AsRef<Path>,
     {
-        let client = self.client()?;
-
         #[cfg(feature = "tokio")]
         let file = tokio::fs::File::open(&path).await.map_err(|e| {
             #[cfg(feature = "tracing")]
@@ -243,7 +235,7 @@ impl VirusTotalClient {
             .await
             .map_err(|e| VirusTotalError::IOError(e.to_string()))?;
 
-        client
+        self.client
             .post(url)
             .header("accept", "application/json")
             .multipart(form)
@@ -295,8 +287,6 @@ impl VirusTotalClient {
         data: Vec<u8>,
         name: N,
     ) -> Result<Bytes, VirusTotalError> {
-        let client = self.client()?;
-
         // It's unfortunate that we had to take ownership of the bytes. This is because `Path::new()`
         // is private in `reqwest`. There is no other way to get the size.
         let url = if data.len() as u64 >= THIRTY_TWO_MEGABYTES {
@@ -312,7 +302,7 @@ impl VirusTotalClient {
                 .mime_str("application/octet-stream")?,
         );
 
-        client
+        self.client
             .post(url)
             .header("accept", "application/json")
             .multipart(form)
@@ -378,7 +368,7 @@ impl VirusTotalClient {
     /// use malwaredb_virustotal::VirusTotalClient;
     ///
     /// // Use of `.unwrap()` for demonstration, don't actually do this.
-    /// let client = VirusTotalClient::new(std::env::var("VT_API_KEY").unwrap());
+    /// let client = VirusTotalClient::new(std::env::var("VT_API_KEY").unwrap()).unwrap();
     /// # tokio_test::block_on(async {
     /// let file_contents = client.download("abc91ba39ea3220d23458f8049ed900c16ce1023").await.unwrap();
     /// # })
@@ -388,8 +378,8 @@ impl VirusTotalClient {
     ///
     /// Will return an error if there is a networking problem.
     pub async fn download(&self, file_hash: &str) -> Result<Vec<u8>, VirusTotalError> {
-        let client = self.client()?;
-        let response = client
+        let response = self
+            .client
             .get(format!(
                 "https://www.virustotal.com/api/v3/files/{file_hash}/download"
             ))
@@ -435,7 +425,7 @@ impl VirusTotalClient {
             self.key.as_str()
         );
 
-        self.client()?
+        self.client
             .get(url)
             .send()
             .await?
@@ -457,7 +447,7 @@ impl VirusTotalClient {
     /// use malwaredb_virustotal::{VirusTotalClient, filesearch::flags};
     ///
     /// // Use of `.unwrap()` for demonstration, don't actually do this.
-    /// let client = VirusTotalClient::new(std::env::var("VT_API_KEY").unwrap());
+    /// let client = VirusTotalClient::new(std::env::var("VT_API_KEY").unwrap()).unwrap();
     /// // Find PDFs, which are benign, have a fill-able form, and Javascript, first seen yesterday
     /// # tokio_test::block_on(async {
     /// #[cfg(not(feature = "jiff"))]
@@ -508,7 +498,7 @@ impl VirusTotalClient {
                 offset
             );
 
-            let body = self.client()?.get(url).send().await?.bytes().await?;
+            let body = self.client.get(url).send().await?.bytes().await?;
             let json_response = String::from_utf8(body.to_ascii_lowercase())
                 .map_err(|_e| VirusTotalError::UTF8Error(body.to_vec()))?;
             let response: FileSearchResponse = VirusTotalError::parse_json(&json_response)?;
@@ -589,7 +579,7 @@ impl VirusTotalClient {
         rescan_type: RecordType,
         identifier: &str,
     ) -> Result<Bytes, VirusTotalError> {
-        self.client()?
+        self.client
             .post(format!(
                 "https://www.virustotal.com/api/v3/{rescan_type}/{identifier}/analyse"
             ))
@@ -667,8 +657,7 @@ impl VirusTotalClient {
     /// Will return an error if there is a networking problem.
     #[inline]
     pub async fn other(&self, url: &str) -> Result<Bytes, VirusTotalError> {
-        let client = self.client()?;
-        client
+        self.client
             .get(format!("https://www.virustotal.com/api/v3/{url}"))
             .send()
             .await
@@ -689,22 +678,20 @@ impl VirusTotalClient {
 
 /// Get a Virus Total client from a key, checking that the key is the expected length.
 impl FromStr for VirusTotalClient {
-    type Err = &'static str;
+    type Err = VirusTotalError;
 
     fn from_str(key: &str) -> Result<Self, Self::Err> {
         if key.len() == VirusTotalClient::KEY_LEN {
-            Ok(Self {
-                key: key.to_string(),
-            })
+            VirusTotalClient::new(key.to_string())
         } else {
-            Err("Invalid API key length")
+            Err(VirusTotalError::ApiKeyError)
         }
     }
 }
 
 impl From<String> for VirusTotalClient {
     fn from(value: String) -> Self {
-        VirusTotalClient::new(value)
+        VirusTotalClient::new(value).expect("Failed to load VirusTotalClient")
     }
 }
 
@@ -721,7 +708,7 @@ mod test {
         if let Ok(api_key) = std::env::var("VT_API_KEY") {
             const HASH: &str = "fff40032c3dc062147c530e3a0a5c7e6acda4d1f1369fbc994cddd3c19a2de88";
 
-            let client = VirusTotalClient::new(api_key);
+            let client = VirusTotalClient::new(api_key).expect("Failed to create VirusTotalClient");
 
             let report = client
                 .get_file_report(HASH)
