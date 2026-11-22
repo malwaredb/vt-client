@@ -137,7 +137,7 @@ pub struct ScanResultAttributes {
     #[serde(with = "ts_seconds")]
     pub last_submission_date: Timestamp,
 
-    /// When the file was last submitted to VirusTotal
+    /// When the file was last submitted to Virus Total
     #[cfg(not(any(feature = "chrono", feature = "jiff")))]
     pub last_submission_date: u64,
 
@@ -172,7 +172,7 @@ pub struct ScanResultAttributes {
     #[serde(with = "ts_seconds")]
     pub last_analysis_date: Timestamp,
 
-    /// When the file was last analyzed by VirusTotal
+    /// When the file was last analyzed by Virus Total
     #[cfg(not(any(feature = "chrono", feature = "jiff")))]
     pub last_analysis_date: u64,
 
@@ -189,7 +189,7 @@ pub struct ScanResultAttributes {
     #[serde(with = "ts_seconds")]
     pub first_submission_date: Timestamp,
 
-    /// When the file was first submitted to VirusTotal
+    /// When the file was first submitted to Virus Total
     #[cfg(not(any(feature = "chrono", feature = "jiff")))]
     pub first_submission_date: u64,
 

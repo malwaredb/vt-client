@@ -103,7 +103,7 @@ impl VirusTotalClient {
             .map_err(|e| {
                 #[cfg(feature = "tracing")]
                 tracing::error!("Error creating VirusTotal client: {e}");
-                e.into()
+                VirusTotalError::from(e)
             })
     }
 
@@ -255,14 +255,14 @@ impl VirusTotalClient {
             .map_err(|e| {
                 #[cfg(feature = "tracing")]
                 tracing::error!("Error submitting VirusTotal file: {e}");
-                e
+                VirusTotalError::from(e)
             })?
             .bytes()
             .await
             .map_err(|e| {
                 #[cfg(feature = "tracing")]
                 tracing::error!("Error parsing VirusTotal file submission response: {e}");
-                e.into()
+                VirusTotalError::from(e)
             })
     }
 
@@ -324,14 +324,14 @@ impl VirusTotalClient {
             .map_err(|e| {
                 #[cfg(feature = "tracing")]
                 tracing::error!("Error submitting VirusTotal bytes: {e}");
-                e
+                VirusTotalError::from(e)
             })?
             .bytes()
             .await
             .map_err(|e| {
                 #[cfg(feature = "tracing")]
                 tracing::error!("Error parsing VirusTotal bytes submission response: {e}");
-                e.into()
+                VirusTotalError::from(e)
             })
     }
 
@@ -420,7 +420,7 @@ impl VirusTotalClient {
             .map_err(|e| {
                 #[cfg(feature = "tracing")]
                 tracing::error!("Error parsing VirusTotal file response: {e}");
-                e
+                VirusTotalError::from(e)
             })?
             .to_vec())
     }
@@ -447,7 +447,7 @@ impl VirusTotalClient {
             .map_err(|e| {
                 #[cfg(feature = "tracing")]
                 tracing::error!("Error parsing VirusTotal search result: {e}");
-                e.into()
+                VirusTotalError::from(e)
             })
     }
 
@@ -602,14 +602,14 @@ impl VirusTotalClient {
             .map_err(|e| {
                 #[cfg(feature = "tracing")]
                 tracing::error!("Error requesting VirusTotal rescan: {e}");
-                e
+                VirusTotalError::from(e)
             })?
             .bytes()
             .await
             .map_err(|e| {
                 #[cfg(feature = "tracing")]
                 tracing::error!("Error parsing VirusTotal rescan response: {e}");
-                e.into()
+                VirusTotalError::from(e)
             })
     }
 
