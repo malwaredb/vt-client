@@ -1,9 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#[cfg(feature = "chrono")]
-use chrono::serde::ts_seconds_option;
-#[cfg(feature = "chrono")]
-use chrono::{DateTime, Utc};
 #[cfg(feature = "jiff")]
 use jiff::fmt::serde::timestamp::second::optional as ts_seconds_option;
 #[cfg(feature = "jiff")]
@@ -20,17 +16,13 @@ pub struct PEInfo {
     pub rich_pe_header_hash: Option<String>,
 
     /// When the program was compiled, can be spoofed
-    #[cfg(feature = "chrono")]
-    #[serde(default, with = "ts_seconds_option")]
-    pub timestamp: Option<DateTime<Utc>>,
-
-    /// When the program was compiled, can be spoofed
     #[cfg(feature = "jiff")]
     #[serde(default, with = "ts_seconds_option")]
     pub timestamp: Option<Timestamp>,
 
     /// When the program was compiled, can be spoofed
-    #[cfg(not(any(feature = "chrono", feature = "jiff")))]
+    #[cfg(not(feature = "jiff"))]
+    #[serde(default)]
     pub timestamp: Option<u64>,
 
     /// Compiler information, if available

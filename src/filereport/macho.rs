@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+use serde::{Deserialize, Serialize};
 
 /// Parsed formation for Mach-O binaries
 /// <https://virustotal.readme.io/reference/macho_info>

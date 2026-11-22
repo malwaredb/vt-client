@@ -7,9 +7,6 @@
 #![deny(clippy::pedantic)]
 #![forbid(unsafe_code)]
 
-#[cfg(all(feature = "chrono", feature = "jiff"))]
-compile_error!("Features `chrono` and `jiff` are mutually exclusive. Pick one.");
-
 /// Data types common to a few data types
 pub mod common;
 /// Logic for parsing the domain report data from Virus Total
@@ -463,9 +460,9 @@ impl VirusTotalClient {
     /// let client = VirusTotalClient::new(std::env::var("VT_API_KEY").unwrap());
     /// // Find PDFs, which are benign, have a fill-able form, and Javascript, first seen yesterday
     /// # tokio_test::block_on(async {
-    /// #[cfg(not(any(feature = "chrono", feature = "jiff")))]
+    /// #[cfg(not(feature = "jiff"))]
     /// let result = client.search(flags::FileType::Pdf + flags::BENIGN + flags::Tag::PdfForm + flags::Tag::PdfJs).await.unwrap();
-    /// #[cfg(any(feature = "chrono", feature = "jiff"))]
+    /// #[cfg(feature = "jiff")]
     /// let result = client.search(flags::FileType::Pdf + flags::BENIGN + flags::Tag::PdfForm + flags::Tag::PdfJs + flags::FirstSubmission::days(1)).await.unwrap();
     /// # })
     /// ```

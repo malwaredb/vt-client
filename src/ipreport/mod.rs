@@ -4,11 +4,6 @@ use crate::common::{AnalysisResult, LastAnalysisStats, Votes};
 
 use std::collections::HashMap;
 
-#[cfg(feature = "chrono")]
-use chrono::{
-    serde::{ts_seconds, ts_seconds_option},
-    DateTime, Utc,
-};
 #[cfg(feature = "jiff")]
 use jiff::{
     fmt::serde::timestamp::second::{optional as ts_seconds_option, required as ts_seconds},
@@ -35,24 +30,14 @@ pub struct IPAttributes {
     pub jarm: Option<String>,
 
     /// When the IP was first seen
-    #[cfg(feature = "chrono")]
-    #[serde(default, with = "ts_seconds_option")]
-    pub first_seen_date: Option<DateTime<Utc>>,
-
-    /// When the IP was first seen
     #[cfg(feature = "jiff")]
     #[serde(default, with = "ts_seconds_option")]
     pub first_seen_date: Option<Timestamp>,
 
     /// When the IP was first seen
-    #[cfg(not(any(feature = "chrono", feature = "jiff")))]
+    #[cfg(not(feature = "jiff"))]
     #[serde(default)]
     pub first_seen_date: Option<u64>,
-
-    /// When the IP address was last analyzed by Virus Total
-    #[cfg(feature = "chrono")]
-    #[serde(with = "ts_seconds")]
-    pub last_analysis_date: DateTime<Utc>,
 
     /// When the IP address was last analyzed by Virus Total
     #[cfg(feature = "jiff")]
@@ -60,7 +45,7 @@ pub struct IPAttributes {
     pub last_analysis_date: Timestamp,
 
     /// When the IP address was last analyzed by Virus Total
-    #[cfg(not(any(feature = "chrono", feature = "jiff")))]
+    #[cfg(not(feature = "jiff"))]
     pub last_analysis_date: u64,
 
     /// Antivirus results, where the key is the name of the antivirus software product
@@ -76,24 +61,14 @@ pub struct IPAttributes {
     pub last_https_certificate: Option<crate::common::certs::SSLCertificate>,
 
     /// Date of the https certificate
-    #[cfg(feature = "chrono")]
-    #[serde(with = "ts_seconds_option", default)]
-    pub last_https_certificate_date: Option<DateTime<Utc>>,
-
-    /// Date of the https certificate
     #[cfg(feature = "jiff")]
     #[serde(with = "ts_seconds_option", default)]
     pub last_https_certificate_date: Option<Timestamp>,
 
     /// Date of the https certificate
-    #[cfg(not(any(feature = "chrono", feature = "jiff")))]
+    #[cfg(not(feature = "jiff"))]
     #[serde(default)]
     pub last_https_certificate_date: Option<u64>,
-
-    /// WHOIS date
-    #[cfg(feature = "chrono")]
-    #[serde(with = "ts_seconds")]
-    pub whois_date: DateTime<Utc>,
 
     /// WHOIS date
     #[cfg(feature = "jiff")]
@@ -101,16 +76,11 @@ pub struct IPAttributes {
     pub whois_date: Timestamp,
 
     /// WHOIS date
-    #[cfg(not(any(feature = "chrono", feature = "jiff")))]
+    #[cfg(not(feature = "jiff"))]
     pub whois_date: u64,
 
     /// WHOIS information
     pub whois: String,
-
-    /// When the report was created
-    #[cfg(feature = "chrono")]
-    #[serde(with = "ts_seconds")]
-    pub last_modification_date: DateTime<Utc>,
 
     /// When the report was created
     #[cfg(feature = "jiff")]
@@ -118,7 +88,7 @@ pub struct IPAttributes {
     pub last_modification_date: Timestamp,
 
     /// When the report was created
-    #[cfg(not(any(feature = "chrono", feature = "jiff")))]
+    #[cfg(not(feature = "jiff"))]
     pub last_modification_date: u64,
 
     /// The IP network's range of addresses

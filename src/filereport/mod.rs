@@ -13,11 +13,6 @@ use crate::common::{AnalysisResult, LastAnalysisStats, Votes};
 
 use std::collections::HashMap;
 
-#[cfg(feature = "chrono")]
-use chrono::{
-    serde::{ts_seconds, ts_seconds_option},
-    DateTime, Utc,
-};
 #[cfg(feature = "jiff")]
 use jiff::{
     fmt::serde::timestamp::second::{optional as ts_seconds_option, required as ts_seconds},
@@ -30,17 +25,13 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ScanResultAttributes {
     /// When the file was created, often spoofed by malware
-    #[cfg(feature = "chrono")]
-    #[serde(default, with = "ts_seconds_option")]
-    pub creation_date: Option<DateTime<Utc>>,
-
-    /// When the file was created, often spoofed by malware
     #[cfg(feature = "jiff")]
     #[serde(default, with = "ts_seconds_option")]
     pub creation_date: Option<Timestamp>,
 
     /// When the file was created, often spoofed by malware
-    #[cfg(not(any(feature = "chrono", feature = "jiff")))]
+    #[cfg(not(feature = "jiff"))]
+    #[serde(default)]
     pub creation_date: Option<u64>,
 
     /// List of tags related to the file's capabilities
@@ -85,23 +76,13 @@ pub struct ScanResultAttributes {
     pub names: Vec<String>,
 
     /// When the file was last modified
-    #[cfg(feature = "chrono")]
-    #[serde(with = "ts_seconds")]
-    pub last_modification_date: DateTime<Utc>,
-
-    /// When the file was last modified
     #[cfg(feature = "jiff")]
     #[serde(with = "ts_seconds")]
     pub last_modification_date: Timestamp,
 
     /// When the file was last modified
-    #[cfg(not(any(feature = "chrono", feature = "jiff")))]
+    #[cfg(not(feature = "jiff"))]
     pub last_modification_date: u64,
-
-    /// Another first seen field
-    #[cfg(feature = "chrono")]
-    #[serde(default, with = "ts_seconds_option")]
-    pub first_seen_itw_date: Option<DateTime<Utc>>,
 
     /// Another first seen field
     #[cfg(feature = "jiff")]
@@ -109,7 +90,8 @@ pub struct ScanResultAttributes {
     pub first_seen_itw_date: Option<Timestamp>,
 
     /// Another first seen field
-    #[cfg(not(any(feature = "chrono", feature = "jiff")))]
+    #[cfg(not(feature = "jiff"))]
+    #[serde(default)]
     pub first_seen_itw_date: Option<u64>,
 
     /// Type tags which can be used with Virus Total Intelligence
@@ -128,17 +110,12 @@ pub struct ScanResultAttributes {
     pub popular_threat_classification: Option<PopularThreatClassification>,
 
     /// When the file was last submitted to Virus Total
-    #[cfg(feature = "chrono")]
-    #[serde(with = "ts_seconds")]
-    pub last_submission_date: DateTime<Utc>,
-
-    /// When the file was last submitted to Virus Total
     #[cfg(feature = "jiff")]
     #[serde(with = "ts_seconds")]
     pub last_submission_date: Timestamp,
 
     /// When the file was last submitted to Virus Total
-    #[cfg(not(any(feature = "chrono", feature = "jiff")))]
+    #[cfg(not(feature = "jiff"))]
     pub last_submission_date: u64,
 
     /// Antivirus results, where the key is the name of the antivirus software product
@@ -163,26 +140,16 @@ pub struct ScanResultAttributes {
     pub type_extension: Option<String>,
 
     /// When the file was last analyzed by Virus Total
-    #[cfg(feature = "chrono")]
-    #[serde(with = "ts_seconds")]
-    pub last_analysis_date: DateTime<Utc>,
-
-    /// When the file was last analyzed by Virus Total
     #[cfg(feature = "jiff")]
     #[serde(with = "ts_seconds")]
     pub last_analysis_date: Timestamp,
 
     /// When the file was last analyzed by Virus Total
-    #[cfg(not(any(feature = "chrono", feature = "jiff")))]
+    #[cfg(not(feature = "jiff"))]
     pub last_analysis_date: u64,
 
     /// The number of unique sources which have submitted this file
     pub unique_sources: u32,
-
-    /// When the file was first submitted to Virus Total
-    #[cfg(feature = "chrono")]
-    #[serde(with = "ts_seconds")]
-    pub first_submission_date: DateTime<Utc>,
 
     /// When the file was first submitted to Virus Total
     #[cfg(feature = "jiff")]
@@ -190,7 +157,7 @@ pub struct ScanResultAttributes {
     pub first_submission_date: Timestamp,
 
     /// When the file was first submitted to Virus Total
-    #[cfg(not(any(feature = "chrono", feature = "jiff")))]
+    #[cfg(not(feature = "jiff"))]
     pub first_submission_date: u64,
 
     /// MD-5 hash of the file

@@ -3,11 +3,9 @@
 use std::fmt::{Debug, Display, Formatter};
 use std::ops::{Add, BitOr};
 
-#[cfg(any(feature = "chrono", feature = "jiff"))]
+#[cfg(feature = "jiff")]
 use std::ops::{Shl, Shr};
 
-#[cfg(feature = "chrono")]
-use chrono::{DateTime, Days, Utc};
 #[cfg(feature = "jiff")]
 use jiff::{tz::TimeZone, Span, Timestamp};
 use serde::{Deserialize, Serialize};
@@ -390,38 +388,18 @@ impl Display for Positives {
 }
 
 /// UTC point in time, the type depends on the enabled date & time feature
-#[cfg(feature = "chrono")]
-type Instant = DateTime<Utc>;
-
-/// UTC point in time, the type depends on the enabled date & time feature
 #[cfg(feature = "jiff")]
 type Instant = Timestamp;
 
 /// Amount of time for shifting dates, the type depends on the enabled date & time feature
-#[cfg(feature = "chrono")]
-type Offset = Days;
-
-/// Amount of time for shifting dates, the type depends on the enabled date & time feature
 #[cfg(feature = "jiff")]
 type Offset = Span;
-
-/// Move an instant forward
-#[cfg(feature = "chrono")]
-fn forward(instant: Instant, offset: Offset) -> Instant {
-    instant + offset
-}
 
 /// Move an instant forward. Goes through UTC since [`Timestamp`] doesn't support calendar units,
 /// such as days, on its own.
 #[cfg(feature = "jiff")]
 fn forward(instant: Instant, offset: Offset) -> Instant {
     (instant.to_zoned(TimeZone::UTC) + offset).timestamp()
-}
-
-/// Move an instant backward
-#[cfg(feature = "chrono")]
-fn backward(instant: Instant, offset: Offset) -> Instant {
-    instant - offset
 }
 
 /// Move an instant backward. Goes through UTC since [`Timestamp`] doesn't support calendar units,
@@ -432,20 +410,14 @@ fn backward(instant: Instant, offset: Offset) -> Instant {
 }
 
 /// Format an instant per the `strftime`-like format
-#[cfg(feature = "chrono")]
-fn format_instant(instant: Instant, format: &'static str) -> impl Display {
-    instant.format(format)
-}
-
-/// Format an instant per the `strftime`-like format
 #[cfg(feature = "jiff")]
 fn format_instant(instant: Instant, format: &'static str) -> impl Display {
     instant.strftime(format)
 }
 
 /// Find files submitted on or after a specific date, or within a date range
-#[cfg(any(feature = "chrono", feature = "jiff"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "chrono", feature = "jiff"))))]
+#[cfg(feature = "jiff")]
+#[cfg_attr(docsrs, doc(cfg(feature = "jiff")))]
 #[derive(Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
 pub struct FirstSubmission {
     /// First seen date & time
@@ -462,8 +434,8 @@ pub struct FirstSubmission {
     pub format: &'static str,
 }
 
-#[cfg(any(feature = "chrono", feature = "jiff"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "chrono", feature = "jiff"))))]
+#[cfg(feature = "jiff")]
+#[cfg_attr(docsrs, doc(cfg(feature = "jiff")))]
 impl FirstSubmission {
     /// Year-Month-Day format for courser file submission selection
     pub const FORMAT_DATE: &'static str = "%Y-%m-%d";
@@ -528,9 +500,6 @@ impl FirstSubmission {
     /// Submitted on or after some days ago
     #[must_use]
     pub fn days(days: u32) -> Self {
-        #[cfg(feature = "chrono")]
-        let start = backward(Utc::now(), Days::new(u64::from(days)));
-        #[cfg(feature = "jiff")]
         let start = backward(Timestamp::now(), Span::new().days(days));
 
         Self {
@@ -542,8 +511,8 @@ impl FirstSubmission {
     }
 }
 
-#[cfg(any(feature = "chrono", feature = "jiff"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "chrono", feature = "jiff"))))]
+#[cfg(feature = "jiff")]
+#[cfg_attr(docsrs, doc(cfg(feature = "jiff")))]
 impl Display for FirstSubmission {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         if self.exact {
@@ -560,8 +529,8 @@ impl Display for FirstSubmission {
     }
 }
 
-#[cfg(any(feature = "chrono", feature = "jiff"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "chrono", feature = "jiff"))))]
+#[cfg(feature = "jiff")]
+#[cfg_attr(docsrs, doc(cfg(feature = "jiff")))]
 impl Add<Offset> for FirstSubmission {
     type Output = FirstSubmission;
 
@@ -582,8 +551,8 @@ impl Add<Offset> for FirstSubmission {
     }
 }
 
-#[cfg(any(feature = "chrono", feature = "jiff"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "chrono", feature = "jiff"))))]
+#[cfg(feature = "jiff")]
+#[cfg_attr(docsrs, doc(cfg(feature = "jiff")))]
 impl Shl<Offset> for FirstSubmission {
     type Output = Self;
 
@@ -603,8 +572,8 @@ impl Shl<Offset> for FirstSubmission {
     }
 }
 
-#[cfg(any(feature = "chrono", feature = "jiff"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "chrono", feature = "jiff"))))]
+#[cfg(feature = "jiff")]
+#[cfg_attr(docsrs, doc(cfg(feature = "jiff")))]
 impl Shr<Offset> for FirstSubmission {
     type Output = Self;
 
@@ -652,8 +621,8 @@ impl Add<Tags> for FileType {
     }
 }
 
-#[cfg(any(feature = "chrono", feature = "jiff"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "chrono", feature = "jiff"))))]
+#[cfg(feature = "jiff")]
+#[cfg_attr(docsrs, doc(cfg(feature = "jiff")))]
 impl Add<FirstSubmission> for FileType {
     type Output = String;
     fn add(self, rhs: FirstSubmission) -> Self::Output {
@@ -675,8 +644,8 @@ impl Add<Positives> for Tags {
     }
 }
 
-#[cfg(any(feature = "chrono", feature = "jiff"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "chrono", feature = "jiff"))))]
+#[cfg(feature = "jiff")]
+#[cfg_attr(docsrs, doc(cfg(feature = "jiff")))]
 impl Add<FirstSubmission> for Tag {
     type Output = String;
     fn add(self, rhs: FirstSubmission) -> Self::Output {
@@ -705,8 +674,8 @@ impl Add<String> for FileTypes {
     }
 }
 
-#[cfg(any(feature = "chrono", feature = "jiff"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "chrono", feature = "jiff"))))]
+#[cfg(feature = "jiff")]
+#[cfg_attr(docsrs, doc(cfg(feature = "jiff")))]
 impl Add<FirstSubmission> for FileTypes {
     type Output = String;
     fn add(self, rhs: FirstSubmission) -> Self::Output {
@@ -730,8 +699,8 @@ impl Add<String> for Tag {
     }
 }
 
-#[cfg(any(feature = "chrono", feature = "jiff"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "chrono", feature = "jiff"))))]
+#[cfg(feature = "jiff")]
+#[cfg_attr(docsrs, doc(cfg(feature = "jiff")))]
 impl Add<FirstSubmission> for Tags {
     type Output = String;
 
@@ -764,8 +733,8 @@ impl Add<FileType> for String {
     }
 }
 
-#[cfg(any(feature = "chrono", feature = "jiff"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "chrono", feature = "jiff"))))]
+#[cfg(feature = "jiff")]
+#[cfg_attr(docsrs, doc(cfg(feature = "jiff")))]
 impl Add<FirstSubmission> for String {
     type Output = String;
 
@@ -774,8 +743,8 @@ impl Add<FirstSubmission> for String {
     }
 }
 
-#[cfg(any(feature = "chrono", feature = "jiff"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "chrono", feature = "jiff"))))]
+#[cfg(feature = "jiff")]
+#[cfg_attr(docsrs, doc(cfg(feature = "jiff")))]
 impl Add<FileType> for FirstSubmission {
     type Output = String;
 
@@ -784,8 +753,8 @@ impl Add<FileType> for FirstSubmission {
     }
 }
 
-#[cfg(any(feature = "chrono", feature = "jiff"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "chrono", feature = "jiff"))))]
+#[cfg(feature = "jiff")]
+#[cfg_attr(docsrs, doc(cfg(feature = "jiff")))]
 impl Add<Positives> for FirstSubmission {
     type Output = String;
 
@@ -794,8 +763,8 @@ impl Add<Positives> for FirstSubmission {
     }
 }
 
-#[cfg(any(feature = "chrono", feature = "jiff"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "chrono", feature = "jiff"))))]
+#[cfg(feature = "jiff")]
+#[cfg_attr(docsrs, doc(cfg(feature = "jiff")))]
 impl Add<String> for FirstSubmission {
     type Output = String;
 
@@ -804,8 +773,8 @@ impl Add<String> for FirstSubmission {
     }
 }
 
-#[cfg(any(feature = "chrono", feature = "jiff"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "chrono", feature = "jiff"))))]
+#[cfg(feature = "jiff")]
+#[cfg_attr(docsrs, doc(cfg(feature = "jiff")))]
 impl Add<Tag> for FirstSubmission {
     type Output = String;
 
@@ -814,8 +783,8 @@ impl Add<Tag> for FirstSubmission {
     }
 }
 
-#[cfg(any(feature = "chrono", feature = "jiff"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "chrono", feature = "jiff"))))]
+#[cfg(feature = "jiff")]
+#[cfg_attr(docsrs, doc(cfg(feature = "jiff")))]
 impl Add<Tags> for FirstSubmission {
     type Output = String;
 
@@ -842,33 +811,6 @@ mod tests {
             types,
             "type:macho OR type:dos OR type:msi positives:5+ tag:signed"
         );
-    }
-
-    #[cfg(feature = "chrono")]
-    #[test]
-    fn first_submission() {
-        use chrono::TimeZone;
-
-        let first =
-            FirstSubmission::at_datetime(Utc.with_ymd_and_hms(2015, 5, 15, 10, 20, 30).unwrap());
-        assert_eq!(first.to_string(), "fs:2015-05-15T10:20:30");
-
-        let first =
-            FirstSubmission::at_datetime(Utc.with_ymd_and_hms(2015, 5, 15, 10, 20, 30).unwrap());
-        let first = first.until_date(Utc.with_ymd_and_hms(2015, 12, 30, 23, 59, 59).unwrap());
-        assert_eq!(
-            first.to_string(),
-            "fs:2015-05-15T10:20:30+ fs:2015-12-30T23:59:59-"
-        );
-
-        let shifted_forward = first.clone() << Days::new(1);
-        assert_eq!(
-            shifted_forward.to_string(),
-            "fs:2015-05-16T10:20:30+ fs:2015-12-31T23:59:59-"
-        );
-
-        let shifted_back = shifted_forward >> Days::new(1);
-        assert_eq!(shifted_back, first);
     }
 
     #[cfg(feature = "jiff")]

@@ -4,8 +4,6 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-#[cfg(feature = "chrono")]
-use chrono::{NaiveDateTime, ParseResult};
 #[cfg(feature = "jiff")]
 use jiff::civil;
 
@@ -207,19 +205,8 @@ pub struct Validity {
 }
 
 impl Validity {
-    #[cfg(any(feature = "chrono", feature = "jiff"))]
+    #[cfg(feature = "jiff")]
     const FORMAT: &'static str = "%Y-%m-%d %H:%M:%S";
-
-    /// Convert the `not_before` date to `NaiveDateTime`
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the data wasn't in the correct format
-    #[cfg(feature = "chrono")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
-    pub fn not_before_to_chrono(&self) -> ParseResult<NaiveDateTime> {
-        NaiveDateTime::parse_from_str(&self.not_before, Self::FORMAT)
-    }
 
     /// Convert the `not_before` date to [`civil::DateTime`]
     ///
@@ -230,17 +217,6 @@ impl Validity {
     #[cfg_attr(docsrs, doc(cfg(feature = "jiff")))]
     pub fn not_before_to_jiff(&self) -> Result<civil::DateTime, jiff::Error> {
         civil::DateTime::strptime(Self::FORMAT, &self.not_before)
-    }
-
-    /// Convert the `not_after` date to `NaiveDateTime`
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the data wasn't in the correct format
-    #[cfg(feature = "chrono")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "chrono")))]
-    pub fn not_after_to_chrono(&self) -> ParseResult<NaiveDateTime> {
-        NaiveDateTime::parse_from_str(&self.not_after, Self::FORMAT)
     }
 
     /// Convert the `not_after` date to [`civil::DateTime`]
@@ -325,8 +301,6 @@ mod tests {
     fn cert() {
         let cert: super::SSLCertificate = serde_json::from_str(CERT_INFO).unwrap();
         assert_eq!(cert.size, 1273);
-        #[cfg(feature = "chrono")]
-        assert!(cert.validity.not_before_to_chrono().is_ok());
         #[cfg(feature = "jiff")]
         {
             assert_eq!(

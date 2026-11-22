@@ -27,10 +27,10 @@ jobs:
             tuf-repo-cdn.sigstore.dev:443
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: cargo test-chrono
-        run: cargo test --workspace --features=chrono
-      - name: cargo test-jiff
-        run: cargo test --features=jiff
+      - name: cargo test
+        run: cargo test
+      - name: cargo test w/jiff
+        run: cargo test --workspace --features=jiff
       - name: build
         run: cargo build --workspace
       - uses: dtolnay/rust-toolchain@be39649afda95dbf70f87cce95f68b8d5797b296 # nightly
