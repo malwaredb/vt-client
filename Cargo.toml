@@ -42,7 +42,7 @@ rstest = { workspace = true }
 development = ["tokio-test"]
 
 [package.metadata.docs.rs]
-features = ["clap", "jiff"]
+features = ["jiff"]
 rustdoc-args = ["--cfg", "docsrs"]
 
 [workspace]
