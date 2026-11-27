@@ -387,31 +387,23 @@ impl Display for Positives {
     }
 }
 
-/// UTC point in time, the type depends on the enabled date & time feature
-#[cfg(feature = "jiff")]
-type Instant = Timestamp;
-
-/// Amount of time for shifting dates, the type depends on the enabled date & time feature
-#[cfg(feature = "jiff")]
-type Offset = Span;
-
 /// Move an instant forward. Goes through UTC since [`Timestamp`] doesn't support calendar units,
 /// such as days, on its own.
 #[cfg(feature = "jiff")]
-fn forward(instant: Instant, offset: Offset) -> Instant {
-    (instant.to_zoned(TimeZone::UTC) + offset).timestamp()
+fn forward(instant: Timestamp, offset: Span) -> Timestamp {
+    (instant.to_zoned_datetime(TimeZone::UTC) + offset).timestamp()
 }
 
 /// Move an instant backward. Goes through UTC since [`Timestamp`] doesn't support calendar units,
 /// such as days, on its own.
 #[cfg(feature = "jiff")]
-fn backward(instant: Instant, offset: Offset) -> Instant {
-    (instant.to_zoned(TimeZone::UTC) - offset).timestamp()
+fn backward(instant: Timestamp, offset: Span) -> Timestamp {
+    (instant.to_zoned_datetime(TimeZone::UTC) - offset).timestamp()
 }
 
 /// Format an instant per the `strftime`-like format
 #[cfg(feature = "jiff")]
-fn format_instant(instant: Instant, format: &'static str) -> impl Display {
+fn format_instant(instant: Timestamp, format: &'static str) -> impl Display {
     instant.strftime(format)
 }
 
@@ -421,10 +413,10 @@ fn format_instant(instant: Instant, format: &'static str) -> impl Display {
 #[derive(Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
 pub struct FirstSubmission {
     /// First seen date & time
-    pub first: Instant,
+    pub first: Timestamp,
 
     /// Second date & time for a range
-    pub second: Option<Instant>,
+    pub second: Option<Timestamp>,
 
     /// If true, then only find files submitted at the first date
     pub exact: bool,
@@ -444,7 +436,7 @@ impl FirstSubmission {
 
     /// Only submitted at a specific date
     #[must_use]
-    pub fn at_date(start: Instant) -> Self {
+    pub fn at_date(start: Timestamp) -> Self {
         Self {
             first: start,
             second: None,
@@ -455,7 +447,7 @@ impl FirstSubmission {
 
     /// Only submitted at a specific date and time
     #[must_use]
-    pub fn at_datetime(start: Instant) -> Self {
+    pub fn at_datetime(start: Timestamp) -> Self {
         Self {
             first: start,
             second: None,
@@ -466,7 +458,7 @@ impl FirstSubmission {
 
     /// First submitted on or after a specific date
     #[must_use]
-    pub fn from_date(start: Instant) -> Self {
+    pub fn from_date(start: Timestamp) -> Self {
         Self {
             first: start,
             second: None,
@@ -477,7 +469,7 @@ impl FirstSubmission {
 
     /// First submitted on or after a specific date and time
     #[must_use]
-    pub fn from_datetime(start: Instant) -> Self {
+    pub fn from_datetime(start: Timestamp) -> Self {
         Self {
             first: start,
             second: None,
@@ -488,7 +480,7 @@ impl FirstSubmission {
 
     /// Builder: Set the end date
     #[must_use]
-    pub fn until_date(self, end: Instant) -> Self {
+    pub fn until_date(self, end: Timestamp) -> Self {
         Self {
             first: self.first,
             second: Some(end),
@@ -531,11 +523,11 @@ impl Display for FirstSubmission {
 
 #[cfg(feature = "jiff")]
 #[cfg_attr(docsrs, doc(cfg(feature = "jiff")))]
-impl Add<Offset> for FirstSubmission {
+impl Add<Span> for FirstSubmission {
     type Output = FirstSubmission;
 
     /// Add an amount of time to the end date, creating relative to start if not present
-    fn add(self, rhs: Offset) -> Self::Output {
+    fn add(self, rhs: Span) -> Self::Output {
         let end = if let Some(end) = self.second {
             forward(end, rhs)
         } else {
@@ -553,13 +545,13 @@ impl Add<Offset> for FirstSubmission {
 
 #[cfg(feature = "jiff")]
 #[cfg_attr(docsrs, doc(cfg(feature = "jiff")))]
-impl Shl<Offset> for FirstSubmission {
+impl Shl<Span> for FirstSubmission {
     type Output = Self;
 
     /// Shift both the start and end dates forward by some amount of time. Does not create
     /// and end date if it doesn't exist.
     #[allow(clippy::suspicious_arithmetic_impl)]
-    fn shl(self, rhs: Offset) -> Self::Output {
+    fn shl(self, rhs: Span) -> Self::Output {
         let start = forward(self.first, rhs);
         let end = self.second.map(|second| forward(second, rhs));
 
@@ -574,13 +566,13 @@ impl Shl<Offset> for FirstSubmission {
 
 #[cfg(feature = "jiff")]
 #[cfg_attr(docsrs, doc(cfg(feature = "jiff")))]
-impl Shr<Offset> for FirstSubmission {
+impl Shr<Span> for FirstSubmission {
     type Output = Self;
 
     /// Shift both the start and dates backward by some amount of time. Does not create
     /// and end date if it doesn't exist.
     #[allow(clippy::suspicious_arithmetic_impl)]
-    fn shr(self, rhs: Offset) -> Self::Output {
+    fn shr(self, rhs: Span) -> Self::Output {
         let start = backward(self.first, rhs);
         let end = self.second.map(|second| backward(second, rhs));
 
