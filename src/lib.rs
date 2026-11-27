@@ -5,6 +5,8 @@
 #![deny(missing_docs)]
 #![deny(clippy::all)]
 #![deny(clippy::pedantic)]
+#![deny(clippy::cargo)]
+#![allow(clippy::multiple_crate_versions)]
 #![forbid(unsafe_code)]
 
 /// Data types common to a few data types
@@ -74,20 +76,25 @@ impl VirusTotalClient {
     /// String parser error if the key isn't printable, or if the client object can't be created.
     #[inline]
     pub fn new(key: String) -> Result<Self, VirusTotalError> {
-        let mut headers = HeaderMap::new();
+        if key.len() < Self::KEY_LEN {
+            return Err(VirusTotalError::ApiKeyError);
+        }
+
+        let mut headers = HeaderMap::with_capacity(1);
+
         #[allow(unused)]
-        headers.insert(
-            VirusTotalClient::API_KEY,
-            HeaderValue::from_str(&key).map_err(|e| {
-                #[cfg(feature = "tracing")]
-                tracing::error!("Error creating header value for VirusTotal client: {e}");
-                VirusTotalError::ApiKeyError
-            })?,
-        );
+        let mut header_api_key = HeaderValue::from_str(&key).map_err(|e| {
+            #[cfg(feature = "tracing")]
+            tracing::error!("VT API key was invalid due to presence of non-printable characters");
+            VirusTotalError::ApiKeyError
+        })?;
+        header_api_key.set_sensitive(true);
+        headers.insert(VirusTotalClient::API_KEY, header_api_key);
 
         let client = reqwest::ClientBuilder::new()
             .gzip(true)
             .default_headers(headers)
+            .redirect(reqwest::redirect::Policy::none())
             .build()
             .map_err(|e| {
                 #[cfg(feature = "tracing")]
@@ -189,34 +196,15 @@ impl VirusTotalClient {
     where
         P: AsRef<Path>,
     {
-        #[cfg(feature = "tokio")]
         let file = tokio::fs::File::open(&path).await.map_err(|e| {
             #[cfg(feature = "tracing")]
             tracing::error!("Error opening file for VirusTotal submission: {e}");
             VirusTotalError::IOError(e.to_string())
         })?;
 
-        #[cfg(not(feature = "tokio"))]
-        let file = std::fs::File::open(&path).map_err(|e| {
-            #[cfg(feature = "tracing")]
-            tracing::error!("Error opening file for VirusTotal submission: {e}");
-            VirusTotalError::IOError(e.to_string())
-        })?;
-
-        #[cfg(feature = "tokio")]
         let size = file
             .metadata()
             .await
-            .map_err(|e| {
-                #[cfg(feature = "tracing")]
-                tracing::error!("Error getting file size: {e}");
-                VirusTotalError::IOError(e.to_string())
-            })?
-            .len();
-
-        #[cfg(not(feature = "tokio"))]
-        let size = file
-            .metadata()
             .map_err(|e| {
                 #[cfg(feature = "tracing")]
                 tracing::error!("Error getting file size: {e}");
@@ -690,8 +678,16 @@ impl FromStr for VirusTotalClient {
 }
 
 impl From<String> for VirusTotalClient {
+    #[inline]
     fn from(value: String) -> Self {
-        VirusTotalClient::new(value).expect("Failed to load VirusTotalClient")
+        match VirusTotalClient::new(value) {
+            Ok(client) => client,
+            Err(e) => {
+                #[cfg(feature = "tracing")]
+                tracing::error!("Error creating client: {e}");
+                panic!("VT client error: {e}")
+            }
+        }
     }
 }
 

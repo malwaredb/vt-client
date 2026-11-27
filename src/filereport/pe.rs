@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #[cfg(feature = "jiff")]
-use jiff::fmt::serde::timestamp::second::optional as ts_seconds_option;
-#[cfg(feature = "jiff")]
 use jiff::Timestamp;
+#[cfg(feature = "jiff")]
+use jiff::fmt::serde::timestamp::second::optional as ts_seconds_option;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 

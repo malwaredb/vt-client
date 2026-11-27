@@ -10,7 +10,7 @@ use malwaredb_virustotal::VirusTotalClient;
 use std::path::PathBuf;
 use std::process::ExitCode;
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use clap::{Parser, Subcommand};
 use sha2::{Digest, Sha256};
 

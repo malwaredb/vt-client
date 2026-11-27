@@ -6,8 +6,8 @@ use std::collections::HashMap;
 
 #[cfg(feature = "jiff")]
 use jiff::{
-    fmt::serde::timestamp::second::{optional as ts_seconds_option, required as ts_seconds},
     Timestamp,
+    fmt::serde::timestamp::second::{optional as ts_seconds_option, required as ts_seconds},
 };
 use serde::{Deserialize, Serialize};
 
@@ -420,13 +420,15 @@ mod tests {
 
         #[cfg(feature = "jiff")]
         {
-            assert!(report
-                .attributes
-                .last_https_certificate
-                .unwrap()
-                .validity
-                .not_before_to_jiff()
-                .is_ok());
+            assert!(
+                report
+                    .attributes
+                    .last_https_certificate
+                    .unwrap()
+                    .validity
+                    .not_before_to_jiff()
+                    .is_ok()
+            );
         }
     }
 }

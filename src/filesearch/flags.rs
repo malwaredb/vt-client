@@ -7,7 +7,7 @@ use std::ops::{Add, BitOr};
 use std::ops::{Shl, Shr};
 
 #[cfg(feature = "jiff")]
-use jiff::{tz::TimeZone, Span, Timestamp};
+use jiff::{Span, Timestamp, tz::TimeZone};
 use serde::{Deserialize, Serialize};
 
 /// File types available for searching

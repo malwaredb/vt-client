@@ -104,7 +104,7 @@ pub enum VirusTotalError {
     /// the prior request has completed
     ConflictError(String),
 
-    /// Http error trying to use the API key
+    /// API key error due to presence of unprintable characters or was too short
     ApiKeyError,
 
     /// Some other unknown or unforeseen error occurred
@@ -136,18 +136,34 @@ impl VirusTotalError {
     pub fn message(&self) -> &'static str {
         match self {
             VirusTotalError::BadRequestError => "The API request is invalid or malformed.",
-            VirusTotalError::InvalidArgumentError => "Some of the provided arguments are incorrect.",
-            VirusTotalError::NotAvailableYet => "The resource is not available yet, but will become available later.",
-            VirusTotalError::UnselectiveContentQueryError => "Content search query is not selective enough.",
+            VirusTotalError::InvalidArgumentError => {
+                "Some of the provided arguments are incorrect."
+            }
+            VirusTotalError::NotAvailableYet => {
+                "The resource is not available yet, but will become available later."
+            }
+            VirusTotalError::UnselectiveContentQueryError => {
+                "Content search query is not selective enough."
+            }
             VirusTotalError::UnsupportedContentQueryError => "Unsupported content search query.",
-            VirusTotalError::AuthenticationRequiredError => "The operation requires an authenticated user. Verify that you have provided your API key.",
-            VirusTotalError::UserNotActiveError => "The user account is not active. Make sure you properly activated your account by following the link sent to your email.",
+            VirusTotalError::AuthenticationRequiredError => {
+                "The operation requires an authenticated user. Verify that you have provided your API key."
+            }
+            VirusTotalError::UserNotActiveError => {
+                "The user account is not active. Make sure you properly activated your account by following the link sent to your email."
+            }
             VirusTotalError::WrongCredentialsError => "The provided API key is incorrect.",
-            VirusTotalError::ForbiddenError => "You are not allowed to perform the requested operation.",
+            VirusTotalError::ForbiddenError => {
+                "You are not allowed to perform the requested operation."
+            }
             VirusTotalError::NotFoundError => "The requested resource was not found.",
             VirusTotalError::AlreadyExistsError => "The resource already exists.",
-            VirusTotalError::FailedDependencyError => "The request depended on another request and that request failed.",
-            VirusTotalError::QuotaExceededError => "You have exceeded one of your quotas (minute, daily or monthly). Daily quotas are reset every day at 00:00 UTC. You may have run out of disk space and/or number of files on your VirusTotal Monitor account",
+            VirusTotalError::FailedDependencyError => {
+                "The request depended on another request and that request failed."
+            }
+            VirusTotalError::QuotaExceededError => {
+                "You have exceeded one of your quotas (minute, daily or monthly). Daily quotas are reset every day at 00:00 UTC. You may have run out of disk space and/or number of files on your VirusTotal Monitor account"
+            }
             VirusTotalError::TooManyRequestsError => "Too many requests.",
             VirusTotalError::TransientError => "Transient server error. Retry might work.",
             VirusTotalError::DeadlineExceededError => "The operation took too long to complete.",
@@ -158,7 +174,7 @@ impl VirusTotalError {
             VirusTotalError::IOError(_) => "Error opening a file for submitting to VirusTotal",
             VirusTotalError::NonPaginatedResults => "A search query didn't have an offset",
             VirusTotalError::ConflictError(_) => "Possible duplicate request or similar error",
-            VirusTotalError::ApiKeyError => "The API key is invalid.",
+            VirusTotalError::ApiKeyError => "VT API key too short or has non-printable characters",
             VirusTotalError::UnknownError => "Some other unknown or unforeseen error occurred",
         }
     }
